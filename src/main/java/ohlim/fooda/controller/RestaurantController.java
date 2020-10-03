@@ -59,9 +59,19 @@ public class RestaurantController {
         return ResponseEntity.created(location_uri).body(map);
     }
 
-    //@DeleteMapping("/user/restaurant/{restaurantId}")
-    //public ResponseEntity
-
+    @DeleteMapping("/user/restaurant/{restaurantId}")
+    public ResponseEntity<?> update(
+            Authentication authentication,
+            @PathVariable("restaurantId") Long id
+    ) throws RestaurantNotFoundException, URISyntaxException {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        restaurantService.deleteRestaurant(userDetails.getUsername(), id);
+        URI location_uri = new URI("/user/restaurant/" + id);
+        Map<String, Object> map = new HashMap<>();
+        map.put("success", true);
+        map.put("restaurantId", id);
+        return ResponseEntity.created(location_uri).body(map);
+    }
 
     @GetMapping("/user/restaurant/{restaurantId}")
     public Restaurant detail(@PathVariable("restaurantId") Long id) throws RestaurantNotFoundException {

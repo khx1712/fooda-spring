@@ -46,4 +46,10 @@ public class RestaurantService {
         restaurant.setRestaurantInfo(restaurantInfo);
         return restaurantRepository.save(restaurant);
     }
+
+    public void deleteRestaurant(String username, Long id) throws RestaurantNotFoundException {
+        Restaurant restaurant = restaurantRepository.findByUserNameAndId(username, id)
+                .orElseThrow(() -> new RestaurantNotFoundException(id));
+        restaurantRepository.delete(restaurant);
+    }
 }

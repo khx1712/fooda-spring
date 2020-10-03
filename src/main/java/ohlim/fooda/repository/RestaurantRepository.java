@@ -10,4 +10,5 @@ public interface RestaurantRepository extends CrudRepository<Restaurant, Long> {
     Optional<Restaurant> findById(Long id);
     List<Restaurant> findByUserName(String username);
     List<Restaurant> findByUserNameAndName(String username, String restaurantName);
+    Optional<Restaurant> findByUserNameAndId(String username, Long id);
 }
