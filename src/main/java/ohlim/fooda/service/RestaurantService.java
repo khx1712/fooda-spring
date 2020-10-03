@@ -7,6 +7,7 @@ import ohlim.fooda.domain.Restaurant;
 import ohlim.fooda.domain.RestaurantDto;
 import ohlim.fooda.repository.AccountRepository;
 import ohlim.fooda.repository.RestaurantRepository;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,9 +36,15 @@ public class RestaurantService {
         return restaurants;
     }
 
-    public Restaurant addRestaurant(Restaurant restaurant) {
-        Restaurant saved = restaurantRepository.save(restaurant);
-        return saved;
+    public Restaurant addRestaurant(Restaurant restaurant) throws ParseException {
+        if(restaurant.getLat() == null && restaurant.getLon() == null){
+            String locationJson = LocationToGPS.getGPSKakaoApiFromLocation(restaurant.getLocation());
+            System.out.println(locationJson);
+            //List<Double> GPS = LocationToGPS.getLatLonFromJsonString(locationJson);
+            //restaurant.setLat(GPS.get(0));
+            //restaurant.setLon(GPS.get(1));
+        }
+        return restaurantRepository.save(restaurant);
     }
 
     public Restaurant updateRestaurant(Long restaurantId, RestaurantDto.RestaurantInfo restaurantInfo) throws RestaurantNotFoundException {
@@ -52,4 +59,5 @@ public class RestaurantService {
                 .orElseThrow(() -> new RestaurantNotFoundException(id));
         restaurantRepository.delete(restaurant);
     }
+
 }
