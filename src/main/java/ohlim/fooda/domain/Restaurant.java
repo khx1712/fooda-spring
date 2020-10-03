@@ -52,4 +52,15 @@ public class Restaurant{
 
     @UpdateTimestamp
     private Date updatedate;
+
+    public void setRestaurantInfo(RestaurantDto.RestaurantInfo restaurantInfo){
+        this.folderId = restaurantInfo.getFolderId();
+        this.name = restaurantInfo.getName();
+        this.phoneNumber = restaurantInfo.getPhoneNumber();
+        this.lat = restaurantInfo.getLat();
+        this.lon = restaurantInfo.getLon();
+        this.location = restaurantInfo.getLocation();
+        this.category = restaurantInfo.getCategory();
+        this.businessHour = restaurantInfo.getBusinessHour();
+    }
 }

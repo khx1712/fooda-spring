@@ -7,7 +7,7 @@ import javax.persistence.Column;
 public class RestaurantDto {
 
     @Getter
-    public  static class RegistRestaurantInfo{
+    public  static class RestaurantInfo{
         private Long folderId;
         private String name;
         private String phoneNumber;
@@ -16,24 +16,6 @@ public class RestaurantDto {
         private String location;
         private Character category;
         private String businessHour;
-    }
-
-    @Getter
-    public static class changeRestaurantInfo{
-        private String name;
-        private String phoneNumber;
-        private Double lat;
-        private Double lon;
-        private String location;
-        private Character category;
-        private String businessHour;
-    }
-
-    @Getter
-    public  static class ChangeFolderInfo{
-        private Long restaurantId;
-        private Long beforeFolderId;
-        private Long afterFolderId;
     }
 
     @Getter

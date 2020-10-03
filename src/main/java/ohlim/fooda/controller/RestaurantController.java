@@ -31,28 +31,11 @@ public class RestaurantController {
     @PostMapping("/user/restaurant")
     public ResponseEntity<?> create(
             Authentication authentication,
-            @RequestBody RestaurantDto.RegistRestaurantInfo resource) throws URISyntaxException {
+            @RequestBody RestaurantDto.RestaurantInfo resource) throws URISyntaxException {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        Long folderId = resource.getFolderId();
-        String userName = userDetails.getUsername();
-        String name = resource.getName();
-        String phoneNumber = resource.getPhoneNumber();
-        Double lat = resource.getLat();
-        Double lon = resource.getLon();
-        String location = resource.getLocation();
-        Character category = resource.getCategory();
-        String businessHour = resource.getBusinessHour();
-        Restaurant restaurant = Restaurant.builder()
-                .folderId(folderId)
-                .userName(userName)
-                .name(name)
-                .phoneNumber(phoneNumber)
-                .lat(lat)
-                .lon(lon)
-                .location(location)
-                .category(category)
-                .businessHour(businessHour)
-                .build();
+        Restaurant restaurant = new Restaurant();
+        restaurant.setRestaurantInfo(resource);
+        restaurant.setUserName(userDetails.getUsername());
         Restaurant saved = restaurantService.addRestaurant(restaurant);
         System.out.println("create restaurant : " + saved.getId());
         URI location_uri = new URI("/user/restaurant/" + saved.getId());
@@ -63,20 +46,22 @@ public class RestaurantController {
     }
 
 
-    @GetMapping("/user/map/restaurants")
-    public RestaurantDto.ResRestaurantVO<?,?> list(
-            Authentication authentication,
-            @RequestParam("lat") Double lat,
-            @RequestParam("lon") Double lon,
-            @RequestParam("page") Integer page,
-            @RequestParam("size") Integer size
-    ){
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        RestaurantDto.ResRestaurantVO<RestaurantDto.MapRestaurantsMeta, List<Restaurant>> resRestaurantVO
-                = (RestaurantDto.ResRestaurantVO<RestaurantDto.MapRestaurantsMeta, List<Restaurant>>)
-                restaurantService.getMapRestaurants(userDetails.getUsername(),lat, lon, page, size );
-        return resRestaurantVO;
+    @PatchMapping("/user/restaurant/{restaurantId}")
+    public ResponseEntity<?> update(
+            @PathVariable("restaurantId") Long id,
+            @RequestBody RestaurantDto.RestaurantInfo resource) throws URISyntaxException, RestaurantNotFoundException {
+        Restaurant updated = restaurantService.updateRestaurant(id, resource);
+        System.out.println("create restaurant : " + updated.getId());
+        URI location_uri = new URI("/user/restaurant/" + updated.getId());
+        Map<String, Object> map = new HashMap<>();
+        map.put("success", true);
+        map.put("restaurantId", updated.getId());
+        return ResponseEntity.created(location_uri).body(map);
     }
+
+    //@DeleteMapping("/user/restaurant/{restaurantId}")
+    //public ResponseEntity
+
 
     @GetMapping("/user/restaurant/{restaurantId}")
     public Restaurant detail(@PathVariable("restaurantId") Long id) throws RestaurantNotFoundException {
