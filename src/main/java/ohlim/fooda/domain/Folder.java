@@ -18,7 +18,7 @@ public class Folder {
     private Long id;
 
     @Column(nullable=false, unique=true)
-    private String UserName;
+    private String userName;
 
     @Column(nullable=false, unique=true, length=30)
     private String name;

@@ -40,9 +40,9 @@ public class RestaurantService {
         if(restaurant.getLat() == null && restaurant.getLon() == null){
             String locationJson = LocationToGPS.getGPSKakaoApiFromLocation(restaurant.getLocation());
             System.out.println(locationJson);
-            //List<Double> GPS = LocationToGPS.getLatLonFromJsonString(locationJson);
-            //restaurant.setLat(GPS.get(0));
-            //restaurant.setLon(GPS.get(1));
+            List<Double> GPS = LocationToGPS.getLatLonFromJsonString(locationJson);
+            restaurant.setLat(GPS.get(0));
+            restaurant.setLon(GPS.get(1));
         }
         return restaurantRepository.save(restaurant);
     }

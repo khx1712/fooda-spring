@@ -57,8 +57,8 @@ public class LocationToGPS {
         JSONArray documentArray = (JSONArray) jsonObject.get("documents");
         JSONObject document = (JSONObject) documentArray.get(0);
         JSONObject location = (JSONObject) document.get("address");
-        Double lat = (Double)location.get("x");
-        Double lon = (Double)location.get("y");
+        Double lat = Double.parseDouble(location.get("x").toString());
+        Double lon = Double.parseDouble(location.get("y").toString());
 
         List<Double> LatLon = new ArrayList<>();
         LatLon.add(lat);
