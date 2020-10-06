@@ -105,6 +105,9 @@ public class RestaurantService {
         return resRestaurantDto;
     }
 
+    public List<Restaurant> getRestaurantByFolderId(Long id) {
+        return restaurantRepository.findAllByFolderId(id);
+    }
 
 
     public class Pair<K, V> {
