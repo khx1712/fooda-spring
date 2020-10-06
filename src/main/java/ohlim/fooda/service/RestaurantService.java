@@ -1,5 +1,6 @@
 package ohlim.fooda.service;
 
+import javassist.NotFoundException;
 import lombok.Getter;
 import lombok.Setter;
 import ohlim.fooda.domain.Account;
@@ -36,7 +37,7 @@ public class RestaurantService {
         return restaurants;
     }
 
-    public Restaurant addRestaurant(Restaurant restaurant) throws ParseException {
+    public Restaurant addRestaurant(Restaurant restaurant) throws ParseException, NotFoundException {
         if(restaurant.getLat() == null && restaurant.getLon() == null){
             String locationJson = LocationToGPS.getGPSKakaoApiFromLocation(restaurant.getLocation());
             System.out.println(locationJson);

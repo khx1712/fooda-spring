@@ -1,6 +1,7 @@
 package ohlim.fooda.controller;
 
 import io.jsonwebtoken.Claims;
+import javassist.NotFoundException;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,7 @@ public class RestaurantController {
     @PostMapping("/user/restaurant")
     public ResponseEntity<?> create(
             Authentication authentication,
-            @RequestBody RestaurantDto.RestaurantInfo resource) throws URISyntaxException, ParseException {
+            @RequestBody RestaurantDto.RestaurantInfo resource) throws URISyntaxException, ParseException, NotFoundException {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Restaurant restaurant = new Restaurant();
         restaurant.setRestaurantInfo(resource);

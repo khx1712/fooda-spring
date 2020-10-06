@@ -1,5 +1,6 @@
 package ohlim.fooda.service;
 
+import javassist.NotFoundException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.*;
@@ -51,10 +52,15 @@ public class LocationToGPS {
         return jsonString;
     }
 
-    public static List<Double> getLatLonFromJsonString(String locationJson) throws ParseException {
+    public static List<Double> getLatLonFromJsonString(String locationJson) throws ParseException, NotFoundException {
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject) jsonParser.parse(locationJson);
         JSONArray documentArray = (JSONArray) jsonObject.get("documents");
+        JSONObject meta = (JSONObject) jsonObject.get("meta");
+        Integer totalCount = Integer.parseInt(meta.get("total_count").toString());
+        if(totalCount == 0){
+            throw new NotFoundException("올바르지 않은 주소입니다."); // handler 생성하기
+        }
         JSONObject document = (JSONObject) documentArray.get(0);
         JSONObject location = (JSONObject) document.get("address");
         Double lat = Double.parseDouble(location.get("x").toString());
