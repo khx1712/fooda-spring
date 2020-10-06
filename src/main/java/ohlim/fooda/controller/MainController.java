@@ -2,9 +2,11 @@ package ohlim.fooda.controller;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import ohlim.fooda.domain.Account;
+import ohlim.fooda.domain.Folder;
 import ohlim.fooda.domain.Token;
 import ohlim.fooda.jwt.JwtTokenUtil;
 import ohlim.fooda.repository.AccountRepository;
+import ohlim.fooda.service.FolderService;
 import ohlim.fooda.service.JwtUserDetailsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,8 @@ public class MainController {
     private AuthenticationManager am;
     @Autowired
     private PasswordEncoder bcryptEncoder;
+    @Autowired
+    private FolderService folderService;
 
 
 
@@ -170,17 +174,20 @@ public class MainController {
 
             account.setPassword(bcryptEncoder.encode(account.getPassword()));
             map.put("success", true);
+            map.put("msg", "회원가입이 완료되었습니다.");
             accountRepository.save(account);
+            Folder folder = Folder.builder()
+                    .name("새폴더")
+                    .userName(account.getUsername())
+                    .build();
+            folderService.addFolder(folder);
             return map;
         } else {
             map.put("success", false);
-            map.put("message", "duplicated username");
+            map.put("msg", "중복되는 아이디가 존재합니다.");
         }
         return map;
     }
-
-
-
 
     @PostMapping(path="/newuser/checkid")
     public Map<String, Object> checkId (@RequestBody Map<String, String> m) {

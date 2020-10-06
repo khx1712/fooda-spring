@@ -2,6 +2,7 @@ package ohlim.fooda.controller;
 
 import ohlim.fooda.jwt.JwtTokenUtil;
 import ohlim.fooda.repository.AccountRepository;
+import ohlim.fooda.service.FolderService;
 import ohlim.fooda.service.JwtUserDetailsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,5 +40,6 @@ public class NewUserController {
     @Autowired
     private AuthenticationManager am;
 
-
+    @Autowired
+    private FolderService folderService;
 }

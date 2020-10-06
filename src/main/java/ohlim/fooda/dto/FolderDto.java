@@ -4,7 +4,6 @@ import lombok.*;
 
 public class FolderDto {
 
-
     @Getter
     @Setter
     @Builder

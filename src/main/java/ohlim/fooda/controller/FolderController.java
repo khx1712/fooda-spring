@@ -1,6 +1,8 @@
 package ohlim.fooda.controller;
 
 import ohlim.fooda.domain.Folder;
+import ohlim.fooda.dto.FolderDto.*;
+import ohlim.fooda.dto.ResponseDto;
 import ohlim.fooda.service.FolderNotFoundException;
 import ohlim.fooda.service.FolderService;
 import org.slf4j.Logger;
@@ -36,10 +38,12 @@ public class FolderController {
         Folder saved = folderService.addFolder(folder);
         System.out.println("create folder : " + saved.getId());
         URI location_uri = new URI("/user/folder/" + saved.getId());
-        Map<String, Object> map = new HashMap<>();
-        map.put("success", true);
-        map.put("folderId", saved.getId());
-        return ResponseEntity.created(location_uri).body(map);
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("success", true);
+        meta.put("msg", "폴더가 생성되었습니다");
+        meta.put("folderId", saved.getId());
+        ResFolderDto<?,?> resFolderDto = ResFolderDto.builder().meta(meta).build();
+        return ResponseEntity.created(location_uri).body(resFolderDto);
     }
 
     @PatchMapping("/user/folder/{folderId}")

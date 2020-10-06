@@ -5,7 +5,7 @@ import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ohlim.fooda.domain.Restaurant;
-import ohlim.fooda.dto.RestaurantDto;
+import ohlim.fooda.dto.RestaurantDto.*;
 import ohlim.fooda.service.RestaurantNotFoundException;
 import ohlim.fooda.service.RestaurantService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class RestaurantController {
     @PostMapping("/user/restaurant")
     public ResponseEntity<?> create(
             Authentication authentication,
-            @RequestBody RestaurantDto.RestaurantInfo resource) throws URISyntaxException, ParseException, NotFoundException {
+            @RequestBody RestaurantInfo resource) throws URISyntaxException, ParseException, NotFoundException {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Restaurant restaurant = new Restaurant();
         restaurant.setRestaurantInfo(resource);
@@ -49,7 +49,7 @@ public class RestaurantController {
     @PatchMapping("/user/restaurant/{restaurantId}")
     public ResponseEntity<?> update(
             @PathVariable("restaurantId") Long id,
-            @RequestBody RestaurantDto.RestaurantInfo resource) throws URISyntaxException, RestaurantNotFoundException {
+            @RequestBody RestaurantInfo resource) throws URISyntaxException, RestaurantNotFoundException {
         Restaurant updated = restaurantService.updateRestaurant(id, resource);
         System.out.println("create restaurant : " + updated.getId());
         URI location_uri = new URI("/user/restaurant/" + updated.getId());
@@ -87,5 +87,17 @@ public class RestaurantController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         List<Restaurant> restaurants = restaurantService.getRestaurantByName(userDetails.getUsername(), name);
         return restaurants;
+    }
+
+    @GetMapping("/user/map/restaurants")
+    public ResRestaurantDto<?,?> list(
+            Authentication authentication,
+            @RequestParam("lat") Double lat,
+            @RequestParam("lon") Double lon,
+            @RequestParam("page") Integer page,
+            @RequestParam("size") Integer size
+    ){
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return restaurantService.getMapRestaurants(userDetails.getUsername(),lat, lon, page, size);
     }
 }

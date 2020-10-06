@@ -58,8 +58,10 @@ public class LocationToGPS {
         JSONArray documentArray = (JSONArray) jsonObject.get("documents");
         JSONObject meta = (JSONObject) jsonObject.get("meta");
         Integer totalCount = Integer.parseInt(meta.get("total_count").toString());
+
+        //TODO: 인식될떄까지 뒤에서 부터 자르고, 끝까지 안되면 처리해주는 ExceptionHandler 생성하기
         if(totalCount == 0){
-            throw new NotFoundException("올바르지 않은 주소입니다."); // handler 생성하기
+            throw new NotFoundException("올바르지 않은 주소입니다.");
         }
         JSONObject document = (JSONObject) documentArray.get(0);
         JSONObject location = (JSONObject) document.get("address");
