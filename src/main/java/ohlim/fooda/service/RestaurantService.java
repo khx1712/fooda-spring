@@ -75,7 +75,7 @@ public class RestaurantService {
             }
         });
 
-        //TODO: Page가 가능한 범위를 넘어갔을 경우를 처리하는 ExceptionHandler 생성
+        //TODO: Page 가 가능한 범위를 넘어갔을 경우를 처리하는 ExceptionHandler 생성
         List<Restaurant> retRestaurants = new ArrayList<>();
         int startIdx = (page-1)*size;
         Boolean isEnd = false;
@@ -100,6 +100,10 @@ public class RestaurantService {
                 .documents(retRestaurants)
                 .build();
         return resRestaurantDto;
+    }
+
+    public List<Restaurant> getRestaurantByFolderId(Long folderId) {
+        return restaurantRepository.findAllByFolderId(folderId);
     }
 
     public class vectorIdx{

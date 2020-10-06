@@ -17,9 +17,9 @@ public class Folder {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(nullable=false, unique=true)
+    @Column(nullable=false)
     private String userName;
 
-    @Column(nullable=false, unique=true, length=30)
+    @Column(nullable=false, length=30)
     private String name;
 }

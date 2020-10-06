@@ -1,5 +1,6 @@
 package ohlim.fooda.controller;
 
+import ohlim.fooda.dto.FolderDto.*;
 import ohlim.fooda.service.FolderNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +21,11 @@ public class FolderErrorAdvice {
     @ResponseBody
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(FolderNotFoundException.class)
-    public Map<String, String> handlerNotFound(FolderNotFoundException e){
+    public ResFolderDto handlerNotFound(FolderNotFoundException e){
         log.error(e.getMessage(), e);
-        Map<String, String> errorAttributes = new HashMap<>();
-        errorAttributes.put("code", "FOLDER_NOT_FOUND");
-        errorAttributes.put("message", e.getMessage());
-        return errorAttributes;
+        Map<String, Object> errorAttributes = new HashMap<>();
+        errorAttributes.put("success", false);
+        errorAttributes.put("msg", e.getMessage());
+        return ResFolderDto.builder().meta(errorAttributes).build();
     }
 }

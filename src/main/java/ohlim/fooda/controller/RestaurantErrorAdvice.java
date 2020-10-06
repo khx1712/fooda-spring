@@ -1,5 +1,6 @@
 package ohlim.fooda.controller;
 
+import ohlim.fooda.dto.RestaurantDto.*;
 import ohlim.fooda.service.RestaurantNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +21,11 @@ public class RestaurantErrorAdvice {
     @ResponseBody
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(RestaurantNotFoundException.class)
-    public Map<String, Object> handlerNotFound(RestaurantNotFoundException e){
+    public ResRestaurantDto handlerNotFound(RestaurantNotFoundException e){
         log.error(e.getMessage(), e);
         Map<String, Object> errorAttributes = new HashMap<>();
         errorAttributes.put("success", false);
         errorAttributes.put("msg", e.getMessage());
-        return errorAttributes;
+        return ResRestaurantDto.builder().meta(errorAttributes).build();
     }
 }
