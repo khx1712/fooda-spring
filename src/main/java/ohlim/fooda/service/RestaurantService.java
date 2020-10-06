@@ -61,37 +61,40 @@ public class RestaurantService {
 
     public ResRestaurantDto<?,?> getMapRestaurants(String username, Double lat, Double lon, Integer page, Integer size){
         List<Restaurant> restaurants= restaurantRepository.findByUserName(username);
-
-        List<vectorIdx> vecAndIdxs = new ArrayList<>();
+        List<Pair<Double,Integer>> vecAndIdx = new ArrayList<>();
         for(int i=0 ; i<restaurants.size() ; i++){
-            vecAndIdxs.add(new vectorIdx(Math.pow(restaurants.get(i).getLat() - lat, 2)
+            vecAndIdx.add(new Pair<>(Math.pow(restaurants.get(i).getLat() - lat,2)
                     + Math.pow(restaurants.get(i).getLon() -lon ,2),i));
         }
 
-        vecAndIdxs.sort(new Comparator<vectorIdx>() {
+        vecAndIdx.sort(new Comparator<Pair<Double, Integer>>() {
             @Override
-            public int compare(vectorIdx v1, vectorIdx v2) {
-                return v1.vector.compareTo(v2.vector);
+            public int compare(Pair<Double, Integer> o1, Pair<Double, Integer> o2) {
+                if(o1.key > o2.key)
+                    return 1;
+                else return 0;
             }
         });
 
-        //TODO: Page 가 가능한 범위를 넘어갔을 경우를 처리하는 ExceptionHandler 생성
         List<Restaurant> retRestaurants = new ArrayList<>();
         int startIdx = (page-1)*size;
         Boolean isEnd = false;
         for(int i=0 ; i<size ; i++){
-            if(startIdx + i >= restaurants.size()){
+            if(startIdx + i <= restaurants.size()){
                 isEnd = true;
                 break;
             }
-            int restaurantsIdx = vecAndIdxs.get(startIdx + i).restaurantIdx;
+            int restaurantsIdx = vecAndIdx.get(startIdx + i).value;
             retRestaurants.add(restaurants.get(restaurantsIdx));
         }
 
         Map<String, Object> meta = new HashMap<>();
-        meta.put("success", true);
-        meta.put("total_count",vecAndIdxs.size());
-        meta.put("msg:", "레스토랑 목록입니다.");
+        meta.put("success:", true);
+        if(restaurants.size() == 0) {
+            meta.put("msg:", "아무 레스토랑도 없습니다.");
+        }else {
+            meta.put("msg:", "레스토랑 목록입니다.");
+        }
         meta.put("is_end:", isEnd);
         meta.put("page:",page);
 
@@ -102,17 +105,28 @@ public class RestaurantService {
         return resRestaurantDto;
     }
 
-    public List<Restaurant> getRestaurantByFolderId(Long folderId) {
-        return restaurantRepository.findAllByFolderId(folderId);
-    }
 
-    public class vectorIdx{
-        public final Double vector;
-        public final Integer restaurantIdx;
 
-        public vectorIdx(Double vector, Integer restaurantIdx) {
-            this.vector = vector;
-            this.restaurantIdx = restaurantIdx;
+    public class Pair<K, V> {
+
+        public final K key;
+        public final V value;
+
+        public Pair(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public boolean equals(Object o) {
+            return o instanceof Pair && Objects.equals(key, ((Pair<?,?>)o).key) && Objects.equals(value, ((Pair<?,?>)o).value);
+        }
+
+        public int hashCode() {
+            return 31 * Objects.hashCode(key) + Objects.hashCode(value);
+        }
+
+        public String toString() {
+            return key + "=" + value;
         }
     }
 }
