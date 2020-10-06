@@ -70,7 +70,7 @@ public class LocationToGPS {
         List<Double> LatLon = new ArrayList<>();
         LatLon.add(lat);
         LatLon.add(lon);
-
+        System.out.println("map branch test");
         return LatLon;
     }
 }
