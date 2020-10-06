@@ -66,11 +66,9 @@ public class LocationToGPS {
         Double lat = Double.parseDouble(location.get("x").toString());
         Double lon = Double.parseDouble(location.get("y").toString());
 
-        System.out.println("main branch test");
         List<Double> LatLon = new ArrayList<>();
         LatLon.add(lat);
         LatLon.add(lon);
-        System.out.println("map branch test");
         return LatLon;
     }
 }

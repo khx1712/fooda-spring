@@ -1,4 +1,4 @@
-package ohlim.fooda.domain;
+package ohlim.fooda.dto;
 
 import lombok.*;
 
@@ -23,18 +23,8 @@ public class RestaurantDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class MapRestaurantsMeta{
-        private Integer page;
-        private Boolean is_end;
-    }
-
-    @Getter
-    @Setter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ResRestaurantVO<M, D> {
-        private M meta;
+    public static class ResRestaurantDto<T, D> extends ResponseDto<T>{
+        private T meta;
         private D documents;
     }
 

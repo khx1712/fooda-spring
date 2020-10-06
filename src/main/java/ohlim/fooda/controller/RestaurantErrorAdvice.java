@@ -20,11 +20,11 @@ public class RestaurantErrorAdvice {
     @ResponseBody
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(RestaurantNotFoundException.class)
-    public Map<String, String> handlerNotFound(RestaurantNotFoundException e){
+    public Map<String, Object> handlerNotFound(RestaurantNotFoundException e){
         log.error(e.getMessage(), e);
-        Map<String, String> errorAttributes = new HashMap<>();
-        errorAttributes.put("code", "RESTAURANT_NOT_FOUND");
-        errorAttributes.put("message", e.getMessage());
+        Map<String, Object> errorAttributes = new HashMap<>();
+        errorAttributes.put("success", false);
+        errorAttributes.put("msg", e.getMessage());
         return errorAttributes;
     }
 }

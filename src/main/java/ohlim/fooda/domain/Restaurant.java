@@ -1,12 +1,11 @@
 package ohlim.fooda.domain;
 
 import lombok.*;
+import ohlim.fooda.dto.RestaurantDto;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Positive;
 import java.util.Date;
 
 @Entity

@@ -1,12 +1,11 @@
 package ohlim.fooda.controller;
 
-import io.jsonwebtoken.Claims;
 import javassist.NotFoundException;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ohlim.fooda.domain.Restaurant;
-import ohlim.fooda.domain.RestaurantDto;
+import ohlim.fooda.dto.RestaurantDto;
 import ohlim.fooda.service.RestaurantNotFoundException;
 import ohlim.fooda.service.RestaurantService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;

@@ -18,8 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-public class FolderContorller {
-    private Logger logger = LoggerFactory.getLogger(ApplicationRunner.class);
+public class FolderController {
+    private final Logger logger = LoggerFactory.getLogger(ApplicationRunner.class);
     @Autowired
     FolderService folderService;
 
