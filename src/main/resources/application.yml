@@ -24,6 +24,15 @@ spring:
     host: 127.0.0.1
     port: 6379
 
+
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 1MB
+      location: C:/Temp
+      max-file-size: 100MB
+      max-request-size: 100MB
+
 jwt:
   secret: 12345678901234567890123456789012
 
