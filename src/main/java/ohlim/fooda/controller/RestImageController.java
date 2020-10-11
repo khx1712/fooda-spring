@@ -2,6 +2,7 @@ package ohlim.fooda.controller;
 
 import ohlim.fooda.domain.RestImage;
 import ohlim.fooda.dto.RestImageDto.*;
+import ohlim.fooda.service.RestImageNotFoundException;
 import ohlim.fooda.service.RestImageService;
 import ohlim.fooda.service.RestaurantService;
 import org.slf4j.Logger;
@@ -48,6 +49,23 @@ public class RestImageController {
         ResRestImageDto<?,?> resRestImageDto = ResRestImageDto.builder()
                 .meta(meta)
                 .documents(restImages)
+                .build();
+        return ResponseEntity.ok(resRestImageDto);
+    }
+
+    @DeleteMapping("/user/images/{imageId}")
+    public ResponseEntity<?> delete(
+            Authentication authentication,
+            @PathVariable("imageId") Long id
+    ) throws RestImageNotFoundException {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        restImageService.deleteRestImage(userDetails.getUsername(), id);
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("success", true);
+        meta.put("msg", "이미지가 삭제되었습니다.");
+        meta.put("restImageId", id);
+        ResRestImageDto<?,?> resRestImageDto = ResRestImageDto.builder()
+                .meta(meta)
                 .build();
         return ResponseEntity.ok(resRestImageDto);
     }

@@ -15,11 +15,28 @@ import java.nio.file.Paths;
 @Service
 public class RestImageService {
 
-    RestImageRepository restImageRepository;
+    private RestImageRepository restImageRepository;
 
     @Autowired
     public RestImageService(RestImageRepository restImageRepository) {
         this.restImageRepository = restImageRepository;
+    }
+
+    public void deleteRestImage(String username, Long id) throws RestImageNotFoundException {
+        RestImage restImage = restImageRepository.findAllByIdAndUserName(id, username)
+                .orElseThrow(()-> new RestImageNotFoundException(id));
+        String filePath = restImage.getFilePath();
+        File deleteFile = new File(filePath);
+        if( deleteFile.exists() ){
+            if(deleteFile.delete()){
+                System.out.println("파일삭제 성공");
+            }else{
+                System.out.println("파일삭제 실패");
+            }
+        }else{
+            System.out.println("파일이 존재하지 않습니다.");
+        }
+        restImageRepository.delete(restImage);
     }
 
     public RestImage fileUpload(MultipartFile multipartFile, String userName, Long restaurantId) throws IOException {

@@ -68,7 +68,7 @@ public class RestaurantController {
     }
 
     @DeleteMapping("/user/restaurant/{restaurantId}")
-    public ResponseEntity<?> update(
+    public ResponseEntity<?> delete(
             Authentication authentication,
             @PathVariable("restaurantId") Long id
     ) throws RestaurantNotFoundException, URISyntaxException {
