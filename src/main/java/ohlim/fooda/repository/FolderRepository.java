@@ -9,5 +9,4 @@ import java.util.Optional;
 public interface FolderRepository extends CrudRepository<Folder, Long> {
     Optional<Folder> findAllByIdAndUserName(Long id, String userName);
     List<Folder> findAllByUserName(String username);
-    Optional<Folder> findByUserName(String username);
 }

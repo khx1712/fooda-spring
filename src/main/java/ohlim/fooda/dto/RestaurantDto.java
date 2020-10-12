@@ -1,8 +1,11 @@
 package ohlim.fooda.dto;
 
 import lombok.*;
+import ohlim.fooda.domain.RestImage;
+import ohlim.fooda.domain.Restaurant;
 
 import javax.persistence.Column;
+import java.util.List;
 
 public class RestaurantDto {
 
@@ -16,6 +19,14 @@ public class RestaurantDto {
         private String location;
         private Character category;
         private String businessHour;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    public  static class RestaurantImageInfo{
+        private Restaurant restaurant;
+        private List<RestImage> images;
     }
 
     @Getter

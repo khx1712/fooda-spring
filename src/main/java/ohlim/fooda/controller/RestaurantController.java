@@ -1,6 +1,8 @@
 package ohlim.fooda.controller;
 
 import javassist.NotFoundException;
+import ohlim.fooda.domain.RestImage;
+import ohlim.fooda.service.RestImageService;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +16,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,24 +32,38 @@ public class RestaurantController {
     private Logger logger = LoggerFactory.getLogger(ApplicationRunner.class);
     @Autowired
     RestaurantService restaurantService;
+    @Autowired
+    RestImageService restImageService;
 
     @PostMapping("/user/restaurant")
     public ResponseEntity<?> create(
             Authentication authentication,
-            @RequestBody RestaurantInfo resource) throws URISyntaxException, ParseException, NotFoundException {
+            @RequestPart RestaurantInfo resource,
+            @RequestPart List<MultipartFile> files
+    ) throws URISyntaxException, ParseException, NotFoundException, IOException {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Restaurant restaurant = new Restaurant();
         restaurant.setRestaurantInfo(resource);
         restaurant.setUserName(userDetails.getUsername());
         Restaurant saved = restaurantService.addRestaurant(restaurant);
+        List<RestImage> restImages = new ArrayList<>();
+        for(MultipartFile multipartFile: files) {
+            RestImage restImage = restImageService.fileUpload(multipartFile, userDetails.getUsername(), saved.getId());
+            restImages.add(restImage);
+        }
         System.out.println("create restaurant : " + saved.getId());
         URI location_uri = new URI("/user/restaurant/" + saved.getId());
         Map<String, Object> meta = new HashMap<>();
         meta.put("success", true);
         meta.put("msg", "레스토랑을 추가하였습니다.");
         meta.put("restaurantId", saved.getId());
+        RestaurantImageInfo restaurantImageInfo = RestaurantImageInfo.builder()
+                .restaurant(saved)
+                .images(restImages)
+                .build();
         ResRestaurantDto<?,?> resRestaurantDto = ResRestaurantDto.builder()
                 .meta(meta)
+                .documents(restaurantImageInfo)
                 .build();
         return ResponseEntity.created(location_uri).body(resRestaurantDto);
     }
