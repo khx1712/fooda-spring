@@ -34,7 +34,7 @@ public class RestImage {
     private String filePath;
 
     @Column(nullable = false) // 파일의 URL
-    private String fileURL;
+    private String fileUrl;
 
     @Column(nullable = false) // 파일 확장자
     private String fileExt;

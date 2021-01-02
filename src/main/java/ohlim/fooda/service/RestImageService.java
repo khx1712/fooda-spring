@@ -69,7 +69,7 @@ public class RestImageService {
                 .userName(userName)
                 .restaurantId(restaurantId)
                 .filePath(dest.getPath())
-                .fileURL("/" + urlPath)
+                .fileUrl("/" + urlPath)
                 .fileSaveName(fileSaveName)
                 .fileExt(ext)
                 .contentType(multipartFile.getContentType())

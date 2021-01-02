@@ -77,7 +77,7 @@ public class RestaurantService {
             }
         });
 
-        List<RestaurantImageInfo> retRestaurants = new ArrayList<>();
+        List<RestaurantImageUrlInfo> retRestaurants = new ArrayList<>();
         int startIdx = (page-1)*size;
         Boolean isEnd = false;
         for(int i=0 ; i<size ; i++){
@@ -87,11 +87,12 @@ public class RestaurantService {
             }
             int restaurantsIdx = vecAndIdxs.get(startIdx + i).restaurantIdx;
             Restaurant restaurant = restaurants.get(restaurantsIdx);
-            RestaurantImageInfo restaurantImageInfo = RestaurantImageInfo.builder()
+            List<Object> imageUrls = restImageRepository.getFileUrls(restaurant.getId());
+            RestaurantImageUrlInfo restaurantImageUrlInfo = RestaurantImageUrlInfo.builder()
                     .restaurant(restaurant)
-                    .images(restImageRepository.findAllByRestaurantId(restaurant.getId()))
+                    .imageUrls(imageUrls)
                     .build();
-            retRestaurants.add(restaurantImageInfo);
+            retRestaurants.add(restaurantImageUrlInfo);
         }
 
         Map<String, Object> meta = new HashMap<>();

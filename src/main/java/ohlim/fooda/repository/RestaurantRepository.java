@@ -1,6 +1,7 @@
 package ohlim.fooda.repository;
 
 import ohlim.fooda.domain.Restaurant;
+import ohlim.fooda.dto.RestaurantDto.*;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;

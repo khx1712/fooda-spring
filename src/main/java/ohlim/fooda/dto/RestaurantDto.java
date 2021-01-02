@@ -32,6 +32,14 @@ public class RestaurantDto {
     @Getter
     @Setter
     @Builder
+    public static class RestaurantImageUrlInfo{
+        private Restaurant restaurant;
+        private List<Object> imageUrls;
+    }
+
+    @Getter
+    @Setter
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ResRestaurantDto<T, D> extends ResponseDto<T>{
