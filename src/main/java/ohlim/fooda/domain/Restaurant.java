@@ -40,6 +40,7 @@ public class Restaurant{
     @Column
     private String location;
 
+    //Korean : K, Japanese : J, Chinese : C, Western : W, World : O, Buffet : B, Cafe : F, Izakaya : I
     @Column
     private Character category;
 

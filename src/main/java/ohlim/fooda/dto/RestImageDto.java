@@ -4,7 +4,6 @@ import lombok.*;
 
 public class RestImageDto {
 
-
     @Getter
     @Setter
     @Builder

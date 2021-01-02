@@ -4,6 +4,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.net.URL;
 import java.util.Date;
 
 @Entity
@@ -31,6 +32,9 @@ public class RestImage {
 
     @Column(nullable = false) // 파일의 저장 경로
     private String filePath;
+
+    @Column(nullable = false) // 파일의 URL
+    private String fileURL;
 
     @Column(nullable = false) // 파일 확장자
     private String fileExt;

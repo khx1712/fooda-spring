@@ -4,6 +4,7 @@ import javassist.NotFoundException;
 import ohlim.fooda.domain.Restaurant;
 import ohlim.fooda.dto.RestaurantDto.*;
 import ohlim.fooda.repository.AccountRepository;
+import ohlim.fooda.repository.RestImageRepository;
 import ohlim.fooda.repository.RestaurantRepository;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +17,13 @@ public class RestaurantService {
 
     private RestaurantRepository restaurantRepository;
     private AccountRepository accountRepository;
+    private RestImageRepository restImageRepository;
 
     @Autowired
-    public RestaurantService(RestaurantRepository restaurantRepository, AccountRepository accountRepository) {
+    public RestaurantService(RestaurantRepository restaurantRepository, AccountRepository accountRepository, RestImageRepository restImageRepository) {
         this.restaurantRepository = restaurantRepository;
         this.accountRepository = accountRepository;
+        this.restImageRepository = restImageRepository;
     }
 
     public Restaurant getRestaurant(Long id) throws RestaurantNotFoundException {
@@ -74,7 +77,7 @@ public class RestaurantService {
             }
         });
 
-        List<Restaurant> retRestaurants = new ArrayList<>();
+        List<RestaurantImageInfo> retRestaurants = new ArrayList<>();
         int startIdx = (page-1)*size;
         Boolean isEnd = false;
         for(int i=0 ; i<size ; i++){
@@ -83,7 +86,12 @@ public class RestaurantService {
                 break;
             }
             int restaurantsIdx = vecAndIdxs.get(startIdx + i).restaurantIdx;
-            retRestaurants.add(restaurants.get(restaurantsIdx));
+            Restaurant restaurant = restaurants.get(restaurantsIdx);
+            RestaurantImageInfo restaurantImageInfo = RestaurantImageInfo.builder()
+                    .restaurant(restaurant)
+                    .images(restImageRepository.findAllByRestaurantId(restaurant.getId()))
+                    .build();
+            retRestaurants.add(restaurantImageInfo);
         }
 
         Map<String, Object> meta = new HashMap<>();

@@ -7,13 +7,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class FileHandler {
-    public static final String SAVE_WINDOW_PATH = "C:/upload";
-    public static final String SAVE_LINUX_PATH = "/upload";
-    public static final String PREFIX_URL = "/upload/";
+    public static final String SAVE_WINDOW_PATH = "C:/restImages";
+    public static final String SAVE_LINUX_PATH = "/restImages";
+    public static final String PREFIX_URL = "restImages/";
 
-    public static void makeDirectory(LocalDateTime localDate){
+    public static String makeDirectory(LocalDateTime localDate){
         File dir;
-        String yearPath = SAVE_WINDOW_PATH + "/" + Integer.toString(localDate.getYear());
+        String yearPath = PREFIX_URL + Integer.toString(localDate.getYear());
         dir = new File(yearPath);
         if(!dir.exists()){
             dir.mkdirs();
@@ -31,16 +31,12 @@ public class FileHandler {
             dir.mkdirs();
             System.out.println("created dayDirectory!");
         }
+        return  dayPath;
     }
 
     public static String getFileUploadPath(){
         LocalDateTime dateTime = LocalDateTime.now();
-        makeDirectory(dateTime);
-        String filePath = SAVE_WINDOW_PATH
-                + "/" + Integer.toString(dateTime.getYear())
-                + "/" + Integer.toString(dateTime.getMonthValue())
-                + "/" + Integer.toString(dateTime.getDayOfMonth());
-        return filePath;
+        return makeDirectory(dateTime);
     }
 
     public static String getFileSaveName(String ext, String userName){

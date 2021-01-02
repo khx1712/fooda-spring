@@ -12,6 +12,7 @@ import ohlim.fooda.service.RestaurantNotFoundException;
 import ohlim.fooda.service.RestaurantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -35,7 +36,7 @@ public class RestaurantController {
     @Autowired
     RestImageService restImageService;
 
-    @PostMapping("/user/restaurant")
+    @PostMapping(value = "/user/restaurant", consumes = { MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<?> create(
             Authentication authentication,
             @RequestPart RestaurantInfo resource,
@@ -68,11 +69,29 @@ public class RestaurantController {
         return ResponseEntity.created(location_uri).body(resRestaurantDto);
     }
 
+    @PostMapping(value = "/newuser/restaurant")
+    public ResponseEntity<?> test_create(
+            @RequestPart String resource,
+            @RequestPart List<MultipartFile> files
+    ) throws URISyntaxException{
+        System.out.println(resource);
+        URI location_uri = new URI("/uewuser/restaurant/" + "test");
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("success", true);
+        meta.put("msg", "레스토랑을 추가하였습니다.");
+        meta.put("resource", resource);
+        ResRestaurantDto<?,?> resRestaurantDto = ResRestaurantDto.builder()
+                .meta(meta)
+                .build();
+        return ResponseEntity.created(location_uri).body(resRestaurantDto);
+    }
+
 
     @PatchMapping("/user/restaurant/{restaurantId}")
     public ResponseEntity<?> update(
             @PathVariable("restaurantId") Long id,
-            @RequestBody RestaurantInfo resource) throws URISyntaxException, RestaurantNotFoundException {
+            @RequestBody RestaurantInfo resource
+    ) throws URISyntaxException, RestaurantNotFoundException {
         Restaurant updated = restaurantService.updateRestaurant(id, resource);
         System.out.println("create restaurant : " + updated.getId());
         URI location_uri = new URI("/user/restaurant/" + updated.getId());
@@ -105,7 +124,9 @@ public class RestaurantController {
     }
 
     @GetMapping("/user/restaurant/{restaurantId}")
-    public ResponseEntity<?> detail(@PathVariable("restaurantId") Long id) throws RestaurantNotFoundException, URISyntaxException {
+    public ResponseEntity<?> detail(
+            @PathVariable("restaurantId") Long id
+    ) throws RestaurantNotFoundException, URISyntaxException {
         Restaurant restaurant = restaurantService.getRestaurant(id);
         URI location_uri = new URI("/user/restaurant/" + id);
         Map<String, Object> meta = new HashMap<>();

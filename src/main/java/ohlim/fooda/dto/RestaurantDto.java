@@ -24,7 +24,7 @@ public class RestaurantDto {
     @Getter
     @Setter
     @Builder
-    public  static class RestaurantImageInfo{
+    public static class RestaurantImageInfo{
         private Restaurant restaurant;
         private List<RestImage> images;
     }
