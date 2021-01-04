@@ -8,6 +8,8 @@ spring:
     password: "!5dhtmdcks"
 
   jpa:
+    database: mysql
+    database-platform: org.hibernate.spatial.dialect.mysql.MySQL56InnoDBSpatialDialect
     open-in-view: false
     generate-ddl: true
     show-sql: true

@@ -32,6 +32,21 @@ public class RestaurantDto {
     @Getter
     @Setter
     @Builder
+    public static class RestaurantImageInfo2{
+        private Long folderId;
+        private String name;
+        private String phoneNumber;
+        private Double lat;
+        private Double lon;
+        private String location;
+        private Character category;
+        private String businessHour;
+        private List<RestImage> images;
+    }
+
+    @Getter
+    @Setter
+    @Builder
     public static class RestaurantImageUrlInfo{
         private Restaurant restaurant;
         private List<Object> imageUrls;

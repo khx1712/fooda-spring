@@ -9,7 +9,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -34,8 +33,8 @@ class RestaurantControllerTest {
                     .id(1234L)
                     .folderId(1L)
                     .name("chichi")
-                    .lat(11.44)
-                    .lon(11.44)
+                    .latitude(11.44)
+                    .longitude(11.44)
                     .location("김민지 바보")
                     .category('C')
                     .businessHour("11~12")

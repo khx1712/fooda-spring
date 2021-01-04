@@ -32,10 +32,10 @@ public class Restaurant{
     private String phoneNumber;
 
     @Column
-    private Double lat;
+    private Double latitude;
 
     @Column
-    private Double lon;
+    private Double longitude;
 
     @Column
     private String location;
@@ -57,8 +57,8 @@ public class Restaurant{
         this.folderId = restaurantInfo.getFolderId();
         this.name = restaurantInfo.getName();
         this.phoneNumber = restaurantInfo.getPhoneNumber();
-        this.lat = restaurantInfo.getLat();
-        this.lon = restaurantInfo.getLon();
+        this.latitude = restaurantInfo.getLat();
+        this.longitude = restaurantInfo.getLon();
         this.location = restaurantInfo.getLocation();
         this.category = restaurantInfo.getCategory();
         this.businessHour = restaurantInfo.getBusinessHour();

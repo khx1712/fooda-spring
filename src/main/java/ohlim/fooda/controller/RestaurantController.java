@@ -41,7 +41,7 @@ public class RestaurantController {
             Authentication authentication,
             @RequestPart RestaurantInfo resource,
             @RequestPart List<MultipartFile> files
-    ) throws URISyntaxException, ParseException, NotFoundException, IOException {
+    ) throws URISyntaxException, ParseException, NotFoundException, IOException, org.locationtech.jts.io.ParseException {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Restaurant restaurant = new Restaurant();
         restaurant.setRestaurantInfo(resource);
