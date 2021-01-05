@@ -2,6 +2,7 @@ package ohlim.fooda.controller;
 
 import javassist.NotFoundException;
 import ohlim.fooda.domain.RestImage;
+import ohlim.fooda.service.IncorrectParameterException;
 import ohlim.fooda.service.RestImageService;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
@@ -166,7 +167,7 @@ public class RestaurantController {
             @RequestParam("lon") Double lon,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size
-    ){
+    ) throws RestaurantNotFoundException, IncorrectParameterException {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         return restaurantService.getMapRestaurants(userDetails.getUsername(),lat, lon, page, size);
     }

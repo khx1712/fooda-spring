@@ -28,13 +28,15 @@ public class RestaurantService {
     }
 
     public Restaurant getRestaurant(Long id) throws RestaurantNotFoundException {
-        Restaurant restaurant = restaurantRepository.findById(id)
-                .orElseThrow(() -> new RestaurantNotFoundException(id));
-        return restaurant;
+        return restaurantRepository.findById(id)
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found: " + id));
     }
 
-    public List<Restaurant> getRestaurantByName(String username, String restaurantName) {
+    public List<Restaurant> getRestaurantByName(String username, String restaurantName) throws RestaurantNotFoundException {
         List<Restaurant> restaurants= restaurantRepository.findByUserNameAndName(username, restaurantName);
+//        if(restaurants.isEmpty()) {
+//            throw new RestaurantNotFoundException(1L);
+//        }
         return restaurants;
     }
 
@@ -51,14 +53,14 @@ public class RestaurantService {
 
     public Restaurant updateRestaurant(Long restaurantId, RestaurantInfo restaurantInfo) throws RestaurantNotFoundException {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
-                .orElseThrow(() -> new RestaurantNotFoundException(restaurantId));
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found: " + restaurantId));
         restaurant.setRestaurantInfo(restaurantInfo);
         return restaurantRepository.save(restaurant);
     }
 
     public void deleteRestaurant(String username, Long id) throws RestaurantNotFoundException {
         Restaurant restaurant = restaurantRepository.findByUserNameAndId(username, id)
-                .orElseThrow(() -> new RestaurantNotFoundException(id));
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found: " + id));
         restaurantRepository.delete(restaurant);
     }
 
@@ -126,7 +128,7 @@ public class RestaurantService {
         return restaurantRepository.findAllByFolderId(id);
     }
 
-    public ResRestaurantDto<?,?> getMapRestaurants(String username, Double lat, Double lng, Integer page, Integer size){
+    public ResRestaurantDto<?,?> getMapRestaurants(String username, Double lat, Double lng, Integer page, Integer size) throws RestaurantNotFoundException, IncorrectParameterException {
         List<Restaurant> restaurants = restaurantRepository.getRestaurantOrderByDist(lat, lng, username);
         int totalCount = restaurants.size();
         int startIdx = (page-1)*size;
@@ -135,9 +137,9 @@ public class RestaurantService {
         int pageCount = (int) Math.ceil((float)totalCount / size);
 
         if(pageCount <= 0) {
-            // TODO: 식당이 하나도 없을때 처리
+            throw new RestaurantNotFoundException("Restaurant not found: " + username);
         }else if(pageCount < page){
-            // TODO: 허용 page 범위 넘어갔다는 오류 추가
+            throw new IncorrectParameterException("Incorrect Parameter: 페이지 범위를 넘어갔습니다." );
         }else if(pageCount == page){
             isEnd = true;
             endIdx = totalCount-1;
@@ -168,4 +170,7 @@ public class RestaurantService {
                 .documents(retRestaurants)
                 .build();
     }
+
+
+
 }
