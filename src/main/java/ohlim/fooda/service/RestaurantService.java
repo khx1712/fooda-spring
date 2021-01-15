@@ -1,176 +1,179 @@
 package ohlim.fooda.service;
 
 import javassist.NotFoundException;
+import ohlim.fooda.domain.Account;
+import ohlim.fooda.domain.Folder;
+import ohlim.fooda.domain.RestImage;
 import ohlim.fooda.domain.Restaurant;
-import ohlim.fooda.dto.RestaurantDto;
-import ohlim.fooda.dto.RestaurantDto.*;
+import ohlim.fooda.dto.SuccessResponse;
+import ohlim.fooda.dto.restaurant.RestaurantDetailDto;
+import ohlim.fooda.dto.restaurant.RestaurantDto;
+import ohlim.fooda.dto.restaurant.RestaurantThumbnailDto;
+import ohlim.fooda.error.exception.AccountNotFoundException;
+import ohlim.fooda.error.exception.FolderNotFoundException;
+import ohlim.fooda.error.exception.InvalidParameterException;
+import ohlim.fooda.error.exception.RestaurantNotFoundException;
 import ohlim.fooda.repository.AccountRepository;
+import ohlim.fooda.repository.FolderRepository;
 import ohlim.fooda.repository.RestImageRepository;
 import ohlim.fooda.repository.RestaurantRepository;
 import org.json.simple.parser.ParseException;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
 @Service
+@Transactional
 public class RestaurantService {
 
     private RestaurantRepository restaurantRepository;
     private AccountRepository accountRepository;
     private RestImageRepository restImageRepository;
+    private FolderRepository folderRepository;
 
     @Autowired
-    public RestaurantService(RestaurantRepository restaurantRepository, AccountRepository accountRepository, RestImageRepository restImageRepository) {
+    public RestaurantService(RestaurantRepository restaurantRepository, AccountRepository accountRepository,
+                             RestImageRepository restImageRepository, FolderRepository folderRepository) {
         this.restaurantRepository = restaurantRepository;
         this.accountRepository = accountRepository;
         this.restImageRepository = restImageRepository;
+        this.folderRepository = folderRepository;
     }
 
-    public Restaurant getRestaurant(Long id) throws RestaurantNotFoundException {
-        return restaurantRepository.findById(id)
-                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found: " + id));
+    /**
+     * 식당 id에 해당하는 식당의 상세정보.
+     * @param id 식당 id
+     * @return 성공시 응답
+     */
+    public RestaurantDetailDto getRestaurant(Long id){
+        Restaurant restaurant = restaurantRepository.getRestaurantDetail(id);
+        return RestaurantDetailDto.createRestaurantDetailDto(restaurant);
     }
 
-    public List<Restaurant> getRestaurantByName(String username, String restaurantName) throws RestaurantNotFoundException {
-        List<Restaurant> restaurants= restaurantRepository.findByUserNameAndName(username, restaurantName);
-//        if(restaurants.isEmpty()) {
-//            throw new RestaurantNotFoundException(1L);
-//        }
-        return restaurants;
-    }
-
-    public Restaurant addRestaurant(Restaurant restaurant) throws ParseException, NotFoundException, org.locationtech.jts.io.ParseException {
-        if(restaurant.getLatitude() == null && restaurant.getLongitude() == null){
-            String locationJson = LocationToGPS.getGPSKakaoApiFromLocation(restaurant.getLocation());
-            System.out.println(locationJson);
-            List<Double> GPS = LocationToGPS.getLatLonFromJsonString(locationJson);
-            restaurant.setLatitude(GPS.get(0));
-            restaurant.setLongitude(GPS.get(1));
+    /**
+     * 식당의 이름에 해당하는 식당들의 상세정보를 제공.
+     * @param username 사용자 id
+     * @param restaurantName 식당 이름
+     * @return 성공시 응답
+     */
+    public List<RestaurantThumbnailDto> getRestaurantByName(String username, String restaurantName){
+        List<Restaurant> restaurants= restaurantRepository.findByUserNameAndRestName(username, restaurantName);
+        if(restaurants.isEmpty()){
+            throw new RestaurantNotFoundException();
         }
-        return restaurantRepository.save(restaurant);
+        List<RestaurantThumbnailDto> restaurantThumbnailDtos= new ArrayList<>();
+        for(Restaurant restaurant : restaurants){
+            restaurantThumbnailDtos.add(RestaurantThumbnailDto.createRestaurantThumbnailDto(restaurant));
+        }
+        System.out.println(restaurantThumbnailDtos);
+        return restaurantThumbnailDtos;
     }
 
-    public Restaurant updateRestaurant(Long restaurantId, RestaurantInfo restaurantInfo) throws RestaurantNotFoundException {
-        Restaurant restaurant = restaurantRepository.findById(restaurantId)
-                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found: " + restaurantId));
-        restaurant.setRestaurantInfo(restaurantInfo);
-        return restaurantRepository.save(restaurant);
+    /**
+     * 식당의 정보와 사진들을 저장한다.
+     * @param userName 사용자의 아이디
+     * @param restaurantDto 식당 상세정보
+     * @param multipartFiles 식당의 이미지 리스트
+     * @return 성공시 응답
+     */
+    public Long addRestaurant(String userName, RestaurantDto restaurantDto, List<MultipartFile> multipartFiles)
+            throws ParseException, NotFoundException{
+        Account account = accountRepository.findByUserName(userName).orElseThrow(()-> new AccountNotFoundException());
+        Folder folder = folderRepository.findById(restaurantDto.getFolderId()).orElseThrow(()-> new FolderNotFoundException());
+        Restaurant restaurant = Restaurant.createRestaurant(restaurantDto, account, folder);
+        restaurantRepository.save(restaurant);
+        System.out.println(restaurant.getId());
+        for(MultipartFile multipartFile: multipartFiles){
+            RestImage restImage = RestImage.createRestImage(multipartFile, restaurant);
+            restImageRepository.save(restImage);
+        }
+        return restaurant.getId();
     }
 
+    /**
+     * 수정할 식당의 정보를 입력받아 수정한다.
+     * @param restaurantId 식당 id
+     * @param restaurantDto 수정할 정보
+     * @return 성공시 응답
+     */
+    public Restaurant updateRestaurant(Long restaurantId, RestaurantDto restaurantDto) throws RestaurantNotFoundException {
+        Restaurant restaurant = restaurantRepository.getRestaurant(restaurantId);
+        // TODO: ModelMapper 처리하기
+        restaurant.setCategory(restaurantDto.getCategory());
+        restaurant.setBusinessHour(restaurantDto.getBusinessHour());
+        restaurant.setLocation(restaurantDto.getLocation());
+        restaurant.setLatitude(restaurantDto.getLatitude());
+        restaurant.setLongitude(restaurant.getLongitude());
+        restaurant.setPhoneNumber(restaurantDto.getPhoneNumber());
+        restaurant.setName(restaurantDto.getName());
+        return restaurant;
+    }
+
+    /**
+     * 식당 id에 해당하는 식당 삭제.
+     * @param username 사용자 id
+     * @param id 식당 id
+     */
     public void deleteRestaurant(String username, Long id) throws RestaurantNotFoundException {
-        Restaurant restaurant = restaurantRepository.findByUserNameAndId(username, id)
-                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found: " + id));
+        Restaurant restaurant = restaurantRepository.findByUserNameAndId(username, id);
         restaurantRepository.delete(restaurant);
     }
 
-
-//    public ResRestaurantDto<?,?> getMapRestaurants(String username, Double lat, Double lng, Integer page, Integer size){
-//        List<Restaurant> restaurants= restaurantRepository.findByUserName(username);
-//        List<vectorIdx> vecAndIdxs = new ArrayList<>();
-//        for(int i=0 ; i<restaurants.size() ; i++){
-//            vecAndIdxs.add(new vectorIdx(Math.pow(restaurants.get(i).getLat() - lat, 2)
-//                    + Math.pow(restaurants.get(i).getLon() -lon ,2),i));
-//        }
-//
-//        vecAndIdxs.sort(new Comparator<vectorIdx>() {
-//            @Override
-//            public int compare(vectorIdx v1, vectorIdx v2) {
-//                return v1.vector.compareTo(v2.vector);
-//            }
-//        });
-//
-//        List<RestaurantImageUrlInfo> retRestaurants = new ArrayList<>();
-//        int startIdx = (page-1)*size;
-//        Boolean isEnd = false;
-//        for(int i=0 ; i<size ; i++){
-//            if(startIdx + i >= restaurants.size()){
-//                isEnd = true;
-//                break;
-//            }
-//            int restaurantsIdx = vecAndIdxs.get(startIdx + i).restaurantIdx;
-//            Restaurant restaurant = restaurants.get(restaurantsIdx);
-//            List<Object> imageUrls = restImageRepository.getFileUrls(restaurant.getId());
-//            RestaurantImageUrlInfo restaurantImageUrlInfo = RestaurantImageUrlInfo.builder()
-//                    .restaurant(restaurant)
-//                    .imageUrls(imageUrls)
-//                    .build();
-//            retRestaurants.add(restaurantImageUrlInfo);
-//        }
-//
-//        Map<String, Object> meta = new HashMap<>();
-//        meta.put("success", true);
-//        meta.put("total_count",vecAndIdxs.size());
-//        meta.put("msg", "레스토랑 목록입니다.");
-//        meta.put("is_end", isEnd);
-//        meta.put("page",page);
-//
-//        ResRestaurantDto<?, ?> resRestaurantDto = ResRestaurantDto.builder()
-//                .meta(meta)
-//                .documents(retRestaurants)
-//                .build();
-//        return resRestaurantDto;
-//    }
-//
-//
-//
-//    public class vectorIdx {
-//        public final Double vector;
-//        public final Integer restaurantIdx;
-//
-//        public vectorIdx(Double vector, Integer restaurantIdx) {
-//            this.vector = vector;
-//            this.restaurantIdx = restaurantIdx;
-//        }
+    /**
+     * Folder id에 해당하는 식당 목록 제공.
+     * @param id Folder id
+     * @return 성공시 응답
+     */
+//    public List<Restaurant> getRestaurantByFolderId(Long id) {
+//        return restaurantRepository.findAllByFolderId(id);
 //    }
 
-    public List<Restaurant> getRestaurantByFolderId(Long id) {
-        return restaurantRepository.findAllByFolderId(id);
-    }
-
-    public ResRestaurantDto<?,?> getMapRestaurants(String username, Double lat, Double lng, Integer page, Integer size) throws RestaurantNotFoundException, IncorrectParameterException {
-        List<Restaurant> restaurants = restaurantRepository.getRestaurantOrderByDist(lat, lng, username);
+    /**
+     * 입력받은 lat, lng 에서 가까운 순으로 Size 만큼의 식당의 목록을 제공한다.
+     * @param username 사용자 id
+     * @param lat 경도
+     * @param lng 위도
+     * @param page 몇번째 page 인지
+     * @param size 하나의 page 크기
+     * @return 성공시 응답
+     */
+    public Map<String, Object> getMapRestaurants(String username, Double lat, Double lng, Integer page, Integer size) throws RestaurantNotFoundException, InvalidParameterException {
+        Account account = accountRepository.findByUserName(username).orElseThrow(()->new AccountNotFoundException());
+        List<Restaurant> restaurants = restaurantRepository.getRestaurantOrderByDist(lat, lng, account.getId());
         int totalCount = restaurants.size();
         int startIdx = (page-1)*size;
         boolean isEnd = false;
         int endIdx = 0;
         int pageCount = (int) Math.ceil((float)totalCount / size);
 
-        if(pageCount <= 0) {
-            throw new RestaurantNotFoundException("Restaurant not found: " + username);
-        }else if(pageCount < page){
-            throw new IncorrectParameterException("Incorrect Parameter: 페이지 범위를 넘어갔습니다." );
+        if(pageCount < page){
+            //throw new InvalidParameterException();
         }else if(pageCount == page){
             isEnd = true;
-            endIdx = totalCount-1;
+            endIdx = totalCount;
         }else{
             endIdx = startIdx + size;
         }
         restaurants = restaurants.subList(startIdx, endIdx);
 
-        List<RestaurantImageUrlInfo> retRestaurants = new ArrayList<>();
+        List<RestaurantThumbnailDto> restaurantThumbnailDtos = new ArrayList<>();
         for(Restaurant restaurant : restaurants){
-            List<Object> imageUrls = restImageRepository.getFileUrls(restaurant.getId());
-            RestaurantImageUrlInfo restaurantImageUrlInfo = RestaurantImageUrlInfo.builder()
-                    .restaurant(restaurant)
-                    .imageUrls(imageUrls)
-                    .build();
-            retRestaurants.add(restaurantImageUrlInfo);
+            restaurantThumbnailDtos.add(RestaurantThumbnailDto.createRestaurantThumbnailDto(restaurant));
         }
 
         Map<String, Object> meta = new HashMap<>();
-        meta.put("success", true);
         meta.put("total_count",totalCount);
-        meta.put("msg", "레스토랑 목록입니다.");
         meta.put("is_end", isEnd);
         meta.put("page",page);
 
-        return ResRestaurantDto.builder()
-                .meta(meta)
-                .documents(retRestaurants)
-                .build();
+        return  new HashMap<String, Object>(){{
+            put("meta", meta);
+            put("documents", restaurantThumbnailDtos);
+        }} ;
     }
-
-
-
 }

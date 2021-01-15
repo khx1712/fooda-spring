@@ -1,11 +1,20 @@
 package ohlim.fooda.domain;
 
 import lombok.*;
+import ohlim.fooda.service.FileHandler;
+import org.apache.commons.io.FileUtils;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -16,32 +25,72 @@ import java.util.Date;
 public class RestImage {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "rest_image_id")
     private Long id;
 
-    @Column(nullable=false)
-    private Long restaurantId;
-
-    @Column(nullable=false)
-    private String userName;
-
-    @Column(nullable = false) // 실제 디스크에 저장되는 이름
+    @Column(nullable = false, name = "file_save_name") // 실제 디스크에 저장되는 이름
     private String fileSaveName;
 
-    @Column(nullable = false) // 파일의 원래 이름
+    @Column(nullable = false, name = "file_origin_name") // 파일의 원래 이름
     private String fileOriginName;
 
-    @Column(nullable = false) // 파일의 저장 경로
+    @Column(nullable = false, name = "file_path") // 파일의 저장 경로
     private String filePath;
 
-    @Column(nullable = false) // 파일의 URL
+    @Column(nullable = false, name = "file_url") // 파일의 URL
     private String fileUrl;
 
-    @Column(nullable = false) // 파일 확장자
+    @Column(nullable = false, name = "file_ext") // 파일 확장자
     private String fileExt;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "content_type")
     private  String contentType;
 
     @CreationTimestamp
+    @Column(name = "register_date")
     private Date registerDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "restaurant_id")
+    private Restaurant restaurant;
+
+    public void setRestaurant(Restaurant restaurant){
+        if(this.restaurant != null) {
+            this.restaurant.getRestImages().remove(this);
+        }
+        this.restaurant = restaurant;
+        restaurant.getRestImages().add(this);
+    }
+
+    public static RestImage createRestImage(MultipartFile multipartFile, Restaurant restaurant) {
+        String fileOriginName = multipartFile.getOriginalFilename();
+        String contentType = multipartFile.getContentType();
+        String[] nameArray = fileOriginName.split("\\.");
+        String ext = nameArray[nameArray.length - 1];
+        String fileSaveName = FileHandler.getFileSaveName(ext, restaurant.getId().toString() + "_" + restaurant.getName());
+        String urlPath = FileHandler.getFileUploadPath() + "/" + fileSaveName;
+        File dest = new File(urlPath);
+
+        try {
+            System.out.println(multipartFile.getInputStream().getClass());
+            InputStream fileStream = multipartFile.getInputStream();
+            // TODO: 이미지를 copy 한뒤에 오류로 종료될 때 이미지를 삭제 처리해주기 (DB에는 안들어감)
+            FileUtils.copyInputStreamToFile(fileStream, dest);
+        } catch (IOException e) {
+            FileUtils.deleteQuietly(dest);
+            e.printStackTrace();
+        }
+
+        RestImage restImage = RestImage.builder()
+                .fileOriginName(fileOriginName)
+                .filePath(dest.getPath())
+                .fileUrl("/" + urlPath)
+                .fileSaveName(fileSaveName)
+                .fileExt(ext)
+                .contentType(contentType)
+                .build();
+        restImage.setRestaurant(restaurant);
+
+        return restImage;
+    }
 }

@@ -23,7 +23,7 @@ public class JwtUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        Account account = repository.findByUsername(username)
+        Account account = repository.findByUserName(username)
                 .orElseThrow(()-> new UsernameNotFoundException("User not found with username: " + username));
 
         List<GrantedAuthority> roles = new ArrayList<>();
@@ -34,7 +34,6 @@ public class JwtUserDetailsService implements UserDetailsService {
             roles.add(new SimpleGrantedAuthority("ROLE_USER"));
             roles.add(new SimpleGrantedAuthority("ROLE_HI"));
         }
-        return new User(account.getUsername(), account.getPassword(), roles);
+        return new User(account.getUserName(), account.getPassword(), roles);
     }
-
 }

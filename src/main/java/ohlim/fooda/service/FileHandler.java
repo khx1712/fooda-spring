@@ -39,9 +39,9 @@ public class FileHandler {
         return makeDirectory(dateTime);
     }
 
-    public static String getFileSaveName(String ext, String userName){
+    public static String getFileSaveName(String ext, String fileName){
         LocalDateTime dateTime = LocalDateTime.now();
-        String fileName = userName + "_"
+        fileName += "_"
                 + Integer.toString(dateTime.getHour())
                 + Integer.toString(dateTime.getMinute())
                 + Integer.toString(dateTime.getSecond())

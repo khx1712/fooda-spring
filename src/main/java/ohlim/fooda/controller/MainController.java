@@ -4,8 +4,10 @@ import io.jsonwebtoken.ExpiredJwtException;
 import ohlim.fooda.domain.Account;
 import ohlim.fooda.domain.Folder;
 import ohlim.fooda.domain.Token;
+import ohlim.fooda.dto.SuccessResponse;
 import ohlim.fooda.jwt.JwtTokenUtil;
 import ohlim.fooda.repository.AccountRepository;
+import ohlim.fooda.service.AccountService;
 import ohlim.fooda.service.FolderService;
 import ohlim.fooda.service.JwtUserDetailsService;
 import org.slf4j.Logger;
@@ -18,12 +20,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -34,6 +38,8 @@ import java.util.regex.Pattern;
 @RequestMapping // This means URL's start with /demo (after Application path)
 public class MainController {
     private Logger logger = LoggerFactory.getLogger(ApplicationRunner.class);
+    @Autowired
+    private AccountService accountService;
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
@@ -53,45 +59,47 @@ public class MainController {
 
     @Transactional
     @PostMapping(path="/admin/deleteuser")
-    public void deleteUser (@RequestBody Map<String, String> m) {
-        logger.info("delete user: " + m.get("username"));
-        Long result = accountRepository.deleteByUsername(m.get("username"));
-        logger.info("delete result: " + result);
+    public ResponseEntity<?> deleteUser (@RequestBody Map<String, String> m) {
+        return new ResponseEntity<>(SuccessResponse.builder()
+                .message("사용자를 삭제하였습니다 : " + m.get("username") + ".")
+                .documents(accountService.deleteAccount(m.get("username"))).build()
+                ,HttpStatus.OK);
     }
 
-    @GetMapping(path="/admin/getusers")
-    public Iterable<Account> getAllUsers() {
-        return accountRepository.findAll();
+    @GetMapping(path="/admin/users")
+    public ResponseEntity<?> getAllUsers() {
+        return new ResponseEntity<>(SuccessResponse.builder()
+                .message("모든 사용자 리스트입니다.")
+                .documents(accountService.getAllAccount()).build()
+                ,HttpStatus.OK);
     }
-
-    @GetMapping(path="/user/normal")
-    public ResponseEntity<?> onlyNormal() {
-        return new ResponseEntity(HttpStatus.OK);
-    }
-
 
     @PostMapping(path="/newuser/logout")
-    public ResponseEntity<?> logout(@RequestBody Map<String, String> m) {
-        String username = null;
+    public ResponseEntity<?> logout(
+            @RequestBody Map<String, String> m) {
+
+        String userName = null;
         String accessToken = m.get("accessToken");
+//        String userName = ((UserDetails)authentication.getPrincipal()).getUsername();
+        // TODO : token 만료 exception 처리 나중에 다시 고민해보기
         try {
-            username = jwtTokenUtil.getUsernameFromToken(accessToken);
+            userName = jwtTokenUtil.getUsernameFromToken(accessToken);
         } catch (IllegalArgumentException e) {} catch (ExpiredJwtException e) { //expire됐을 때
-            username = e.getClaims().getSubject();
-            logger.info("username from expired access token: " + username);
+            userName = e.getClaims().getSubject();
+            logger.info("username from expired access token: " + userName);
         }
 
+        // redis 에서 refreshToken 존재 유무 확인하고 삭제
         try {
-            if (redisTemplate.opsForValue().get(username) != null) {
-                //delete refresh token
-                redisTemplate.delete(username);
+            if (redisTemplate.opsForValue().get(userName) != null) {
+                redisTemplate.delete(userName);
             }
         } catch (IllegalArgumentException e) {
+            // TODO : refreshToken 존재 하지 않을때 exception 만들기
             logger.warn("user does not exist");
         }
 
-        //cache logout token for 10 minutes!
-        logger.info(" logout ing : " + accessToken);
+        //cache logout token for 10 minutes! : accessToken을 10분 뒤에 만료시킨다.
         redisTemplate.opsForValue().set(accessToken, true);
         redisTemplate.expire(accessToken, 10*6*1000, TimeUnit.MILLISECONDS);
 
@@ -156,14 +164,12 @@ public class MainController {
     @PostMapping(path="/newuser/add") // Map ONLY POST Requests
     public Map<String, Object> addNewUser (@RequestBody Account account) {
         System.out.println(account);
-        // @ResponseBody means the returned String is the response, not a view name
-        // @RequestParam means it is a parameter from the GET or POST request
-        String un = account.getUsername();
+        String un = account.getUserName();
         Map<String, Object> map = new HashMap<>();
         System.out.println("회원가입요청 아이디: "+un + "비번: " + account.getPassword());
 
-        if (accountRepository.findByUsername(un).isEmpty()) {
-            account.setUsername(un);
+        if (accountRepository.findByUserName(un).isEmpty()) {
+            account.setUserName(un);
             account.setEmail(account.getEmail());
             String adminPattern = "^admin([0-9]+)$";
             if (Pattern.matches(adminPattern, un)) {
@@ -176,11 +182,10 @@ public class MainController {
             map.put("success", true);
             map.put("msg", "회원가입이 완료되었습니다.");
             accountRepository.save(account);
-            Folder folder = Folder.builder()
+            folderService.addFolder(Folder.builder()
                     .name("새폴더")
-                    .userName(account.getUsername())
-                    .build();
-            folderService.addFolder(folder);
+                    .account(account)
+                    .build());
             return map;
         } else {
             map.put("success", false);
@@ -194,7 +199,7 @@ public class MainController {
         Map<String, Object> map = new HashMap<>();
 
         System.out.println("아이디 체크 요청 이메일: " + m.get("username"));
-        if (accountRepository.findByUsername(m.get("username")).isEmpty()) map.put("success", true);
+        if (accountRepository.findByUserName(m.get("username")).isEmpty()) map.put("success", true);
         else map.put("success", false);
         return map;
     }

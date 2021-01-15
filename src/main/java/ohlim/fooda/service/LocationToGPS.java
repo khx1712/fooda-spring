@@ -1,6 +1,7 @@
 package ohlim.fooda.service;
 
 import javassist.NotFoundException;
+import ohlim.fooda.error.exception.InvalidLocationException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.*;
@@ -15,7 +16,6 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class LocationToGPS {
 
@@ -34,14 +34,13 @@ public class LocationToGPS {
             BufferedReader rd = null;
             rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
             StringBuffer docJson = new StringBuffer();
-
             String line;
             while ((line = rd.readLine()) != null){
                 docJson.append(line);
             }
-
             jsonString = docJson.toString();
             rd.close();
+
 
         } catch (UnsupportedEncodingException | MalformedURLException e) {
             e.printStackTrace();
@@ -59,10 +58,11 @@ public class LocationToGPS {
         JSONObject meta = (JSONObject) jsonObject.get("meta");
         Integer totalCount = Integer.parseInt(meta.get("total_count").toString());
 
-        //TODO: 인식될떄까지 뒤에서 부터 자르고, 끝까지 안되면 처리해주는 ExceptionHandler 생성하기
+        // 입력받은 location 에 해당하는 좌표가 존재하지 않으면 error
         if(totalCount == 0){
-            throw new NotFoundException("올바르지 않은 주소입니다.");
+            throw new InvalidLocationException();
         }
+
         JSONObject document = (JSONObject) documentArray.get(0);
         JSONObject location = (JSONObject) document.get("address");
         Double lat = Double.parseDouble(location.get("x").toString());
