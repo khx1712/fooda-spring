@@ -1,6 +1,10 @@
 package ohlim.fooda.controller;
 
 import io.lettuce.core.internal.LettuceSets;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import javassist.NotFoundException;
 import ohlim.fooda.domain.RestImage;
 import ohlim.fooda.dto.SuccessResponse;
@@ -34,6 +38,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+@Api(tags = {"Restaurant API"})
 @RestController
 public class RestaurantController {
 
@@ -43,6 +48,7 @@ public class RestaurantController {
     @Autowired
     RestImageService restImageService;
 
+    @ApiOperation(value = "식당 등록", notes = "식당 정보와 사진으로 새로운 식당을 등록합니다.")
     @PostMapping(value = "/user/restaurant", consumes = { MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<?> create(
             Authentication authentication,
@@ -66,6 +72,7 @@ public class RestaurantController {
                 , HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "식당 수정", notes = "식당 정보를 통해 식당을 수정합니다.")
     @PatchMapping("/user/restaurant/{restaurantId}")
     public ResponseEntity<?> update(
             @PathVariable("restaurantId") Long id,
@@ -82,6 +89,7 @@ public class RestaurantController {
                 ,HttpStatus.OK);
     }
 
+    @ApiOperation(value = "식당 삭제", notes = "식당 id를 통해 식당을 삭제합니다.")
     @DeleteMapping("/user/restaurant/{restaurantId}")
     public ResponseEntity<?> delete(
             Authentication authentication,
@@ -95,6 +103,7 @@ public class RestaurantController {
                 , HttpStatus.OK);
     }
 
+    @ApiOperation(value = "식당 상세", notes = "식당 id를 통해 식당의 상세정보를 확인합니다(이미지 URL 포함).")
     @GetMapping("/user/restaurant/{restaurantId}")
     public ResponseEntity<?> detail(
             @PathVariable("restaurantId") Long id
@@ -106,6 +115,7 @@ public class RestaurantController {
                 , HttpStatus.OK);
     }
 
+    @ApiOperation(value = "식당 찾기(식당이름)", notes = "식당 이름를 통해 식당들의 정보를 확인합니다(Thumbnail 포함).")
     @GetMapping("/user/restaurants")
     public ResponseEntity<?> detailByName(
             Authentication authentication,
@@ -119,6 +129,7 @@ public class RestaurantController {
                 HttpStatus.OK);
     }
 
+    @ApiOperation(value = "식당 찾기(위치)", notes = "입력한 좌표를 통해 가까운 식당들의 정보를 확인합니다(Thumbnail 포함).")
     @GetMapping("/user/map/restaurants")
     public ResponseEntity<?> list(
             Authentication authentication,

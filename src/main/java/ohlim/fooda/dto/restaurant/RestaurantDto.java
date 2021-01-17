@@ -9,6 +9,8 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RestaurantDto {
     private Long folderId;
     private String name;

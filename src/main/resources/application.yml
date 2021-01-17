@@ -26,7 +26,7 @@ spring:
     host: 127.0.0.1
     port: 6379
 
-
+# TODO: location 경로 바꼈으므로 수정 요망
   servlet:
     multipart:
       enabled: true

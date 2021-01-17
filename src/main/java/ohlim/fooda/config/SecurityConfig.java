@@ -35,6 +35,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
+    private static final String[] AUTH_LIST = {
+            // swagger ui 접근
+            "/swagger-resources/**",
+            "/swagger-ui.html/**",
+            "/v2/api-docs",
+            "/webjars/**",
+
+            // image url 접근
+            "/restImages/**",
+
+            // 새로운 사용자 접근
+            "/newuser/**",
+            "/js/**","/css/**","/lib/**"
+    };
+
     @Override
     protected void configure(HttpSecurity http) throws Exception
     {
@@ -46,10 +61,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).
                 and().
                 authorizeRequests().
-                antMatchers("/newuser/**").permitAll().
-                and().
-                authorizeRequests().
-                antMatchers("/restImages/**").permitAll().
+                antMatchers(AUTH_LIST).permitAll().
                 and().
                 authorizeRequests().
                 antMatchers("/admin/**").hasRole("ADMIN").
