@@ -1,6 +1,7 @@
 package ohlim.fooda.domain;
 
 import lombok.*;
+import ohlim.fooda.dto.folder.FolderDto;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -46,5 +47,23 @@ public class Folder {
         }
         this.account = account;
         account.getFolders().add(this);
+    }
+
+    public static  Folder createFolder(Account account, FolderDto folderDto){
+        // TODO: ModelMapper 처리해주기
+        Folder folder = Folder.builder()
+                .name(folderDto.getName())
+                .build();
+        folder.setAccount(account);
+        return folder;
+    }
+
+    public static  Folder createFolder(Account account, String name){
+        // TODO: ModelMapper 처리해주기
+        Folder folder = Folder.builder()
+                .name(name)
+                .build();
+        folder.setAccount(account);
+        return folder;
     }
 }

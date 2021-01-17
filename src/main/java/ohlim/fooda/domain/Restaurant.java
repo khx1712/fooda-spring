@@ -93,6 +93,7 @@ public class Restaurant{
 
     public static Restaurant createRestaurant(RestaurantDto restaurantDto, Account account, Folder folder)
             throws NotFoundException, ParseException {
+        // TODO: ModelMapper 처리해주기
         Restaurant restaurant = Restaurant.builder()
                 .name(restaurantDto.getName())
                 .category(restaurantDto.getCategory())

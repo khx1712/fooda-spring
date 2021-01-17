@@ -5,12 +5,11 @@ import ohlim.fooda.domain.Account;
 import ohlim.fooda.domain.Folder;
 import ohlim.fooda.domain.RestImage;
 import ohlim.fooda.domain.Restaurant;
-import ohlim.fooda.dto.SuccessResponse;
 import ohlim.fooda.dto.restaurant.RestaurantDetailDto;
+import ohlim.fooda.dto.restaurant.RestaurantImageDto;
 import ohlim.fooda.dto.restaurant.RestaurantDto;
 import ohlim.fooda.dto.restaurant.RestaurantThumbnailDto;
 import ohlim.fooda.error.exception.AccountNotFoundException;
-import ohlim.fooda.error.exception.FolderNotFoundException;
 import ohlim.fooda.error.exception.InvalidParameterException;
 import ohlim.fooda.error.exception.RestaurantNotFoundException;
 import ohlim.fooda.repository.AccountRepository;
@@ -18,9 +17,7 @@ import ohlim.fooda.repository.FolderRepository;
 import ohlim.fooda.repository.RestImageRepository;
 import ohlim.fooda.repository.RestaurantRepository;
 import org.json.simple.parser.ParseException;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,8 +48,13 @@ public class RestaurantService {
      * @return 성공시 응답
      */
     public RestaurantDetailDto getRestaurant(Long id){
-        Restaurant restaurant = restaurantRepository.getRestaurantDetail(id);
+        Restaurant restaurant = restaurantRepository.getRestaurant(id);
         return RestaurantDetailDto.createRestaurantDetailDto(restaurant);
+    }
+
+    public RestaurantImageDto getRestaurantIncludeImage(Long id) {
+        Restaurant restaurant = restaurantRepository.getRestaurantImage(id);
+        return RestaurantImageDto.createRestaurantImageDto(restaurant);
     }
 
     /**
@@ -74,6 +76,8 @@ public class RestaurantService {
         return restaurantThumbnailDtos;
     }
 
+
+
     /**
      * 식당의 정보와 사진들을 저장한다.
      * @param userName 사용자의 아이디
@@ -84,7 +88,7 @@ public class RestaurantService {
     public Long addRestaurant(String userName, RestaurantDto restaurantDto, List<MultipartFile> multipartFiles)
             throws ParseException, NotFoundException{
         Account account = accountRepository.findByUserName(userName).orElseThrow(()-> new AccountNotFoundException());
-        Folder folder = folderRepository.findById(restaurantDto.getFolderId()).orElseThrow(()-> new FolderNotFoundException());
+        Folder folder = folderRepository.getFolder(restaurantDto.getFolderId());
         Restaurant restaurant = Restaurant.createRestaurant(restaurantDto, account, folder);
         restaurantRepository.save(restaurant);
         System.out.println(restaurant.getId());
@@ -176,4 +180,5 @@ public class RestaurantService {
             put("documents", restaurantThumbnailDtos);
         }} ;
     }
+
 }

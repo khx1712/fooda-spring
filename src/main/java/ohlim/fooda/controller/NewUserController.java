@@ -2,6 +2,7 @@ package ohlim.fooda.controller;
 
 import ohlim.fooda.jwt.JwtTokenUtil;
 import ohlim.fooda.repository.AccountRepository;
+import ohlim.fooda.repository.FolderRepository;
 import ohlim.fooda.service.AccountService;
 import ohlim.fooda.service.FolderService;
 import ohlim.fooda.service.JwtUserDetailsService;
@@ -28,6 +29,9 @@ public class NewUserController {
 
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private FolderRepository folderRepository;
 
     @Autowired
     RedisTemplate<String, Object> redisTemplate;

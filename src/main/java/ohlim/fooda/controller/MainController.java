@@ -5,8 +5,10 @@ import ohlim.fooda.domain.Account;
 import ohlim.fooda.domain.Folder;
 import ohlim.fooda.domain.Token;
 import ohlim.fooda.dto.SuccessResponse;
+import ohlim.fooda.dto.folder.FolderDto;
 import ohlim.fooda.jwt.JwtTokenUtil;
 import ohlim.fooda.repository.AccountRepository;
+import ohlim.fooda.repository.FolderRepository;
 import ohlim.fooda.service.AccountService;
 import ohlim.fooda.service.FolderService;
 import ohlim.fooda.service.JwtUserDetailsService;
@@ -35,13 +37,15 @@ import java.util.regex.Pattern;
 
 @RestController
 @CrossOrigin
-@RequestMapping // This means URL's start with /demo (after Application path)
+@RequestMapping
 public class MainController {
     private Logger logger = LoggerFactory.getLogger(ApplicationRunner.class);
     @Autowired
     private AccountService accountService;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private FolderRepository folderRepository;
     @Autowired
     RedisTemplate<String, Object> redisTemplate;
     @Autowired
@@ -54,7 +58,6 @@ public class MainController {
     private PasswordEncoder bcryptEncoder;
     @Autowired
     private FolderService folderService;
-
 
 
     @Transactional
@@ -161,6 +164,7 @@ public class MainController {
     }
 
 
+    @Transactional
     @PostMapping(path="/newuser/add") // Map ONLY POST Requests
     public Map<String, Object> addNewUser (@RequestBody Account account) {
         System.out.println(account);
@@ -182,10 +186,7 @@ public class MainController {
             map.put("success", true);
             map.put("msg", "회원가입이 완료되었습니다.");
             accountRepository.save(account);
-            folderService.addFolder(Folder.builder()
-                    .name("새폴더")
-                    .account(account)
-                    .build());
+            folderRepository.save(Folder.createFolder(account, "새폴더"));
             return map;
         } else {
             map.put("success", false);

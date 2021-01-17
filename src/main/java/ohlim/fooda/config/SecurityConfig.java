@@ -38,13 +38,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private static final String[] AUTH_LIST = {
             // swagger ui 접근
             "/swagger-resources/**",
+            "/configuration/ui",
+            "/configuration/security",
+            "/swagger/**",
             "/swagger-ui.html/**",
             "/v2/api-docs",
             "/webjars/**",
-
+            "/csrf/**",
             // image url 접근
             "/restImages/**",
-
             // 새로운 사용자 접근
             "/newuser/**",
             "/js/**","/css/**","/lib/**"

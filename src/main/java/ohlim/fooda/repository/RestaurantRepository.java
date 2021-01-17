@@ -3,7 +3,6 @@ package ohlim.fooda.repository;
 import ohlim.fooda.domain.Account;
 import ohlim.fooda.domain.Restaurant;
 import ohlim.fooda.dto.restaurant.RestaurantDto;
-import ohlim.fooda.dto.restaurant.RestaurantImageUrlDto;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -31,7 +30,7 @@ public class RestaurantRepository{
         }
     }
 
-    public Restaurant getRestaurantDetail(Long id){
+    public Restaurant getRestaurantImage(Long id){
         return em.createQuery("select distinct r from Restaurant r join fetch r.restImages where r.id = :restaurantId"
                 , Restaurant.class).setParameter("restaurantId", id).getSingleResult();
     }
@@ -50,6 +49,12 @@ public class RestaurantRepository{
                 "a.userName = :userName", Restaurant.class)
                 .setParameter("restaurantId", id)
                 .setParameter("userName", userName).getSingleResult();
+    }
+
+    public List<Restaurant> findByFolderId(Long folderId){
+        return em.createQuery("select r from Restaurant r join r.folder f " +
+                "where f.id = :folderId", Restaurant.class)
+                .setParameter("folderId", folderId).getResultList();
     }
 
     public void delete(Restaurant restaurant){

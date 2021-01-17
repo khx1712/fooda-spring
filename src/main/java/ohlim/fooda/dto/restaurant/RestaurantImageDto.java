@@ -1,6 +1,8 @@
 package ohlim.fooda.dto.restaurant;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import ohlim.fooda.domain.RestImage;
 import ohlim.fooda.domain.Restaurant;
 
@@ -10,11 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RestaurantDetailDto {
-    private Long restaurantId;
-    private Long folderId;
+public class RestaurantImageDto {
     private String name;
     private String phoneNumber;
     private Double latitude;
@@ -22,12 +20,15 @@ public class RestaurantDetailDto {
     private String location;
     private Character category;
     private String businessHour;
-    private String thumbnailUrl;
+    List<String> imageUrls;
 
-    public static RestaurantDetailDto createRestaurantDetailDto(Restaurant restaurant){
+    public static RestaurantImageDto createRestaurantImageDto(Restaurant restaurant){
         // TODO: ModelMapper 처리하기
-        return RestaurantDetailDto.builder()
-                .restaurantId(restaurant.getId())
+        List<String> restImageUrls = new ArrayList<>();
+        for(RestImage restImage : restaurant.getRestImages()){
+            restImageUrls.add(restImage.getFileUrl());
+        }
+        return RestaurantImageDto.builder()
                 .name(restaurant.getName())
                 .category(restaurant.getCategory())
                 .businessHour(restaurant.getBusinessHour())
@@ -35,7 +36,7 @@ public class RestaurantDetailDto {
                 .phoneNumber(restaurant.getPhoneNumber())
                 .latitude(restaurant.getLatitude())
                 .longitude(restaurant.getLongitude())
-                .thumbnailUrl(restaurant.getThumbnailUrl())
+                .imageUrls(restImageUrls)
                 .build();
     }
 }

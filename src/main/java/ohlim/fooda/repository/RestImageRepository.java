@@ -15,6 +15,10 @@ public class RestImageRepository {
     @PersistenceContext
     private EntityManager em;
 
+    public RestImage getRestImage(Long id){
+        return em.find(RestImage.class, id);
+    }
+
     public void save(RestImage restImage){
         if(restImage.getId() == null){
             em.persist(restImage);
@@ -23,8 +27,8 @@ public class RestImageRepository {
         }
     }
 
-    public RestImage getRestImage(Long restImageId){
-        return em.find(RestImage.class, restImageId);
+    public void delete(RestImage restImage){
+        em.remove(restImage);
     }
 
     public List<RestImage> findAllByRestaurantId(Long restaurantId){

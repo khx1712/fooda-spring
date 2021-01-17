@@ -17,7 +17,7 @@ public class RestImageDto {
     private String fileExt;
     private  String contentType;
 
-    public RestImageDto createRestImageDto(RestImage restImage){
+    public static RestImageDto createRestImageDto(RestImage restImage){
         // TODO: ModelMapper 처리하기
         return RestImageDto.builder()
                 .id(restImage.getId())
