@@ -1,7 +1,6 @@
 package ohlim.fooda.domain;
 
 import lombok.*;
-import ohlim.fooda.service.FileHandler;
 import org.apache.commons.io.FileUtils;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,11 +9,8 @@ import javax.persistence.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -67,8 +63,8 @@ public class RestImage {
         String contentType = multipartFile.getContentType();
         String[] nameArray = fileOriginName.split("\\.");
         String ext = nameArray[nameArray.length - 1];
-        String fileSaveName = FileHandler.getFileSaveName(ext, restaurant.getId().toString() + "_" + restaurant.getName());
-        String urlPath = FileHandler.getFileUploadPath() + "/" + fileSaveName;
+        String fileSaveName = getFileSaveName(ext, restaurant.getId().toString() + "_" + restaurant.getName());
+        String urlPath = getFileUploadPath() + "/" + fileSaveName;
         File dest = new File(urlPath);
 
         try {
@@ -92,5 +88,48 @@ public class RestImage {
         restImage.setRestaurant(restaurant);
 
         return restImage;
+    }
+
+    public static String makeDirectory(LocalDateTime localDate){
+        final String SAVE_WINDOW_PATH = "C:/restImages";
+        final String SAVE_LINUX_PATH = "/restImages";
+        final String PREFIX_URL = "restImages/";
+
+        File dir;
+        String yearPath = PREFIX_URL + Integer.toString(localDate.getYear());
+        dir = new File(yearPath);
+        if(!dir.exists()){
+            dir.mkdirs();
+            System.out.println("created yearDirectory!");
+        }
+        String monthPath = yearPath + "/" + Integer.toString(localDate.getMonthValue());
+        dir = new File(monthPath);
+        if(!dir.exists()){
+            dir.mkdirs();
+            System.out.println("created monthDirectory!");
+        }
+        String dayPath = monthPath + "/" + Integer.toString(localDate.getDayOfMonth());
+        dir = new File(dayPath);
+        if(!dir.exists()){
+            dir.mkdirs();
+            System.out.println("created dayDirectory!");
+        }
+        return  dayPath;
+    }
+
+    public static String getFileUploadPath(){
+        LocalDateTime dateTime = LocalDateTime.now();
+        return makeDirectory(dateTime);
+    }
+
+    public static String getFileSaveName(String ext, String fileName){
+        LocalDateTime dateTime = LocalDateTime.now();
+        fileName += "_"
+                + Integer.toString(dateTime.getHour())
+                + Integer.toString(dateTime.getMinute())
+                + Integer.toString(dateTime.getSecond())
+                + Integer.toString(dateTime.getNano())
+                + "." + ext;
+        return fileName;
     }
 }
