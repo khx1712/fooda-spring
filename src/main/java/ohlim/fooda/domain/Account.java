@@ -1,11 +1,12 @@
 package ohlim.fooda.domain;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import javassist.NotFoundException;
+import lombok.*;
+import ohlim.fooda.dto.restaurant.RestaurantDto;
+import ohlim.fooda.dto.user.AccountDto;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.json.simple.parser.ParseException;
 
 import javax.persistence.*;
 import javax.validation.constraints.Pattern;
@@ -14,6 +15,11 @@ import java.util.*;
 
 @Data
 @Entity
+@Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Account {
 
     @Id
@@ -57,5 +63,19 @@ public class Account {
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private Set<Folder> folders = new LinkedHashSet<Folder>();
+
+    public static Account createAccount(AccountDto accountDto){
+        // TODO: ModelMapper 처리해주기
+        return Account.builder()
+                .userName(accountDto.getUserName())
+                .password(accountDto.getPassword())
+                .phoneNumber(accountDto.getPhoneNumber())
+                .age(accountDto.getAge())
+                .email(accountDto.getEmail())
+                .gender(accountDto.getGender())
+                .folders(new LinkedHashSet<>())
+                .restaurants(new LinkedHashSet<>())
+                .build();
+    }
 
 }

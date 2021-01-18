@@ -18,12 +18,12 @@ import java.util.List;
 public class JwtUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private AccountRepository repository;
+    private AccountRepository accountRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        Account account = repository.findByUserName(username)
+        Account account = accountRepository.findByUserName(username)
                 .orElseThrow(()-> new UsernameNotFoundException("User not found with username: " + username));
 
         List<GrantedAuthority> roles = new ArrayList<>();

@@ -1,11 +1,11 @@
 package ohlim.fooda.controller;
 
 import io.jsonwebtoken.ExpiredJwtException;
-import ohlim.fooda.domain.Account;
-import ohlim.fooda.domain.Folder;
 import ohlim.fooda.domain.Token;
 import ohlim.fooda.dto.SuccessResponse;
-import ohlim.fooda.dto.folder.FolderDto;
+import ohlim.fooda.dto.user.AccountDto;
+import ohlim.fooda.dto.user.LoginDto;
+import ohlim.fooda.dto.user.TokenPairDto;
 import ohlim.fooda.jwt.JwtTokenUtil;
 import ohlim.fooda.repository.AccountRepository;
 import ohlim.fooda.repository.FolderRepository;
@@ -22,22 +22,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 
 @RestController
 @CrossOrigin
-@RequestMapping
 public class MainController {
     private Logger logger = LoggerFactory.getLogger(ApplicationRunner.class);
     @Autowired
@@ -60,8 +56,7 @@ public class MainController {
     private FolderService folderService;
 
 
-    @Transactional
-    @PostMapping(path="/admin/deleteuser")
+    @PostMapping(path="/admin/deleteUser")
     public ResponseEntity<?> deleteUser (@RequestBody Map<String, String> m) {
         return new ResponseEntity<>(SuccessResponse.builder()
                 .message("사용자를 삭제하였습니다 : " + m.get("username") + ".")
@@ -77,145 +72,61 @@ public class MainController {
                 ,HttpStatus.OK);
     }
 
-    @PostMapping(path="/newuser/logout")
+    @PostMapping(path="/newUser/add")
+    public ResponseEntity<?> addNewUser (@RequestBody AccountDto accountDto) {
+        Long accountId = accountService.addAccount(accountDto);
+        return new ResponseEntity<>(
+                SuccessResponse.builder()
+                        .message("'"+accountId.toString()+"' 유저를 등록하였습니다.")
+                        // TODO: Dto 처리해줄지 고민해보기
+                        .meta( new HashMap<String, Long>(){{
+                            put("accountId", accountId);
+                        }}).build()
+                , HttpStatus.CREATED);
+    }
+
+    @PostMapping(path="/newUser/checkId/{userName}")
+    public ResponseEntity<?> checkId (
+            @PathVariable("userName") String userName) {
+        accountService.checkDuplicateUserName(userName);
+        return new ResponseEntity<>(
+                SuccessResponse.builder()
+                        .message("중복되지 않은 아이디입니다.").build()
+                , HttpStatus.OK);
+    }
+
+    @PostMapping(path="/newUser/checkEmail/{email}")
+    public ResponseEntity<?> checkEmail (
+            @PathVariable("email") String email){
+        accountService.checkDuplicateEmail(email);
+        return new ResponseEntity<>(
+                SuccessResponse.builder()
+                        .message("중복되지 않은 이메일입니다.").build()
+                , HttpStatus.OK);
+    }
+
+    @PostMapping(path = "/newUser/login")
+    public ResponseEntity<?> login(@RequestBody LoginDto loginDto) throws Exception {
+        TokenPairDto tokenPairDto = accountService.loginAccount(loginDto);
+        return new ResponseEntity<>(
+                SuccessResponse.builder()
+                        .message("로그인 되었습니다.")
+                        .documents(tokenPairDto).build()
+                , HttpStatus.OK);
+    }
+
+    @PostMapping(path="/newUser/logout")
     public ResponseEntity<?> logout(
-            @RequestBody Map<String, String> m) {
-
-        String userName = null;
-        String accessToken = m.get("accessToken");
-//        String userName = ((UserDetails)authentication.getPrincipal()).getUsername();
-        // TODO : token 만료 exception 처리 나중에 다시 고민해보기
-        try {
-            userName = jwtTokenUtil.getUsernameFromToken(accessToken);
-        } catch (IllegalArgumentException e) {} catch (ExpiredJwtException e) { //expire됐을 때
-            userName = e.getClaims().getSubject();
-            logger.info("username from expired access token: " + userName);
-        }
-
-        // redis 에서 refreshToken 존재 유무 확인하고 삭제
-        try {
-            if (redisTemplate.opsForValue().get(userName) != null) {
-                redisTemplate.delete(userName);
-            }
-        } catch (IllegalArgumentException e) {
-            // TODO : refreshToken 존재 하지 않을때 exception 만들기
-            logger.warn("user does not exist");
-        }
-
-        //cache logout token for 10 minutes! : accessToken을 10분 뒤에 만료시킨다.
-        redisTemplate.opsForValue().set(accessToken, true);
-        redisTemplate.expire(accessToken, 10*6*1000, TimeUnit.MILLISECONDS);
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("success", true);
-        return new ResponseEntity(HttpStatus.OK);
+            @RequestBody TokenPairDto tokenPairDto
+    ) {
+        accountService.logoutAccount(tokenPairDto);
+        return new ResponseEntity<>(
+                SuccessResponse.builder()
+                        .message("로그아웃 되었습니다.").build()
+                , HttpStatus.OK);
     }
 
-    @PostMapping(path="/newuser/check")
-    public Map<String, Object> checker(@RequestBody Map<String, String> m) {
-        String username = null;
-        Map<String, Object> map = new HashMap<>();
-        try {
-            username = jwtTokenUtil.getUsernameFromToken(m.get("accessToken"));
-        } catch (IllegalArgumentException e) {
-            logger.warn("Unable to get JWT Token");
-        }
-        catch (ExpiredJwtException e) {
-        }
-
-        if (username != null) {
-            map.put("success", true);
-            map.put("username", username);
-        } else {
-            map.put("success", false);
-        }
-        return map;
-    }
-
-    @PostMapping(path = "/newuser/login")
-    public Map<String, Object> login(@RequestBody Map<String, String> m) throws Exception {
-        final String username = m.get("username");
-        logger.info("test input username: " + username);
-        try {
-            am.authenticate(new UsernamePasswordAuthenticationToken(username, m.get("password")));
-        } catch (Exception e){
-            throw e;
-        }
-
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        final String accessToken = jwtTokenUtil.generateAccessToken(userDetails);
-        final String refreshToken = jwtTokenUtil.generateRefreshToken(username);
-
-        Token retok = new Token();
-        retok.setUsername(username);
-        retok.setRefreshToken(refreshToken);
-
-        //generate Token and save in redis
-        ValueOperations<String, Object> vop = redisTemplate.opsForValue();
-        vop.set(username, retok);
-
-        logger.info("generated access token: " + accessToken);
-        logger.info("generated refresh token: " + refreshToken);
-        Map<String, Object> map = new HashMap<>();
-        map.put("success", true);
-        map.put("accessToken", accessToken);
-        map.put("refreshToken", refreshToken);
-        return map;
-    }
-
-
-    @Transactional
-    @PostMapping(path="/newuser/add") // Map ONLY POST Requests
-    public Map<String, Object> addNewUser (@RequestBody Account account) {
-        System.out.println(account);
-        String un = account.getUserName();
-        Map<String, Object> map = new HashMap<>();
-        System.out.println("회원가입요청 아이디: "+un + "비번: " + account.getPassword());
-
-        if (accountRepository.findByUserName(un).isEmpty()) {
-            account.setUserName(un);
-            account.setEmail(account.getEmail());
-            String adminPattern = "^admin([0-9]+)$";
-            if (Pattern.matches(adminPattern, un)) {
-                account.setRole("ROLE_ADMIN");
-            } else {
-                account.setRole("ROLE_USER");
-            }
-
-            account.setPassword(bcryptEncoder.encode(account.getPassword()));
-            map.put("success", true);
-            map.put("msg", "회원가입이 완료되었습니다.");
-            accountRepository.save(account);
-            folderRepository.save(Folder.createFolder(account, "새폴더"));
-            return map;
-        } else {
-            map.put("success", false);
-            map.put("msg", "중복되는 아이디가 존재합니다.");
-        }
-        return map;
-    }
-
-    @PostMapping(path="/newuser/checkid")
-    public Map<String, Object> checkId (@RequestBody Map<String, String> m) {
-        Map<String, Object> map = new HashMap<>();
-
-        System.out.println("아이디 체크 요청 이메일: " + m.get("username"));
-        if (accountRepository.findByUserName(m.get("username")).isEmpty()) map.put("success", true);
-        else map.put("success", false);
-        return map;
-    }
-
-    @PostMapping(path="/newuser/checkemail")
-    public Map<String, Object> checkEmail (@RequestBody Map<String, String> m) {
-        Map<String, Object> map = new HashMap<>();
-        System.out.println("이메일 체크 요청 이메일: " + m.get("email"));
-
-        if (accountRepository.findByEmail(m.get("email")) == null) map.put("success", true);
-        else map.put("success", false);
-        return map;
-    }
-
-    @PostMapping(path="/newuser/refresh")
+    @PostMapping(path="/newUser/refresh")
     public Map<String, Object>  requestForNewAccessToken(@RequestBody Map<String, String> m) {
         String accessToken = null;
         String refreshToken = null;
@@ -254,7 +165,7 @@ public class MainController {
                     map.put("success", false);
                     map.put("msg", "refresh token is expired.");
                 }
-            } else { //refresh token이 없으면
+            } else { //refresh token이 없다 재 로그인 해야됨
                 map.put("success", false);
                 map.put("msg", "your refresh token does not exist.");
             }

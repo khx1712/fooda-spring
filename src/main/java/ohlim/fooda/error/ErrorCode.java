@@ -8,7 +8,9 @@ public enum ErrorCode {
     ACCOUNT_NOT_FOUND(402, "C005", "Account Not Found"),
     FOLDER_NOT_FOUND(402, "C003", "Folder Not Found"),
     FOLDER_NOT_EMPTY(402, "C005", "Folder Not Empty"),
-    INVALID_LOCATION(402, "C004", "Invalid Location");
+    INVALID_LOCATION(402, "C004", "Invalid Location"),
+    DUPLICATE_USERNAME(402, "C006", "Duplicate UserName"),
+    DUPLICATE_EMAIL(402, "C006", "Duplicate Email");
 
     private final String code;
     private final String message;
