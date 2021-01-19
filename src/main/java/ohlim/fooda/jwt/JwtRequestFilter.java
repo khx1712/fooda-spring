@@ -3,7 +3,6 @@ package ohlim.fooda.jwt;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import ohlim.fooda.error.ErrorCode;
-import ohlim.fooda.service.JwtUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,8 +31,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     RedisTemplate<String, Object> redisTemplate;
-    @Autowired
-    private JwtUserDetailsService jwtUserDetailsService;
 
     /* spring boot에서 filter를 Bean으로 등록해주는 code이다.
         현재 버전에서는 등록하지 않아도 filder를 사용가능한듯하다 나중에 문제 없으면 삭제하자

@@ -43,9 +43,9 @@ public class RestaurantService {
     }
 
     /**
-     * 식당 id에 해당하는 식당의 상세정보.
+     * 식당 id에 해당하는 식당의 상세정보를 반환합니다.
      * @param id 식당 id
-     * @return 성공시 응답
+     * @return 식당 상세 정보
      */
     public RestaurantDetailDto getRestaurant(Long id){
         Restaurant restaurant = restaurantRepository.getRestaurant(id);
@@ -58,10 +58,10 @@ public class RestaurantService {
     }
 
     /**
-     * 식당의 이름에 해당하는 식당들의 상세정보를 제공.
+     * 식당의 이름에 해당하는 식당들의 상세정보를 반환합니다.
      * @param username 사용자 id
      * @param restaurantName 식당 이름
-     * @return 성공시 응답
+     * @return 썸네일을 포함한 식당정보 목록
      */
     public List<RestaurantThumbnailDto> getRestaurantByName(String username, String restaurantName){
         List<Restaurant> restaurants= restaurantRepository.findByUserNameAndRestName(username, restaurantName);
@@ -76,14 +76,12 @@ public class RestaurantService {
         return restaurantThumbnailDtos;
     }
 
-
-
     /**
-     * 식당의 정보와 사진들을 저장한다.
+     * 식당의 정보와 사진들을 저장합니다.
      * @param userName 사용자의 아이디
      * @param restaurantDto 식당 상세정보
      * @param multipartFiles 식당의 이미지 리스트
-     * @return 성공시 응답
+     * @return 저장된 식당 아이디
      */
     public Long addRestaurant(String userName, RestaurantDto restaurantDto, List<MultipartFile> multipartFiles)
             throws ParseException, NotFoundException{
@@ -100,12 +98,12 @@ public class RestaurantService {
     }
 
     /**
-     * 수정할 식당의 정보를 입력받아 수정한다.
+     * 수정할 식당의 정보를 입력받아 수정합니다.
      * @param restaurantId 식당 id
      * @param restaurantDto 수정할 정보
-     * @return 성공시 응답
+     * @return 수정된 식당 아이디
      */
-    public Restaurant updateRestaurant(Long restaurantId, RestaurantDto restaurantDto) throws RestaurantNotFoundException {
+    public Long updateRestaurant(Long restaurantId, RestaurantDto restaurantDto) throws RestaurantNotFoundException {
         Restaurant restaurant = restaurantRepository.getRestaurant(restaurantId);
         // TODO: ModelMapper 처리하기
         restaurant.setCategory(restaurantDto.getCategory());
@@ -115,11 +113,11 @@ public class RestaurantService {
         restaurant.setLongitude(restaurant.getLongitude());
         restaurant.setPhoneNumber(restaurantDto.getPhoneNumber());
         restaurant.setName(restaurantDto.getName());
-        return restaurant;
+        return restaurant.getId();
     }
 
     /**
-     * 식당 id에 해당하는 식당 삭제.
+     * 식당 id에 해당하는 식당 삭제합니다.
      * @param username 사용자 id
      * @param id 식당 id
      */
@@ -129,22 +127,13 @@ public class RestaurantService {
     }
 
     /**
-     * Folder id에 해당하는 식당 목록 제공.
-     * @param id Folder id
-     * @return 성공시 응답
-     */
-//    public List<Restaurant> getRestaurantByFolderId(Long id) {
-//        return restaurantRepository.findAllByFolderId(id);
-//    }
-
-    /**
-     * 입력받은 lat, lng 에서 가까운 순으로 Size 만큼의 식당의 목록을 제공한다.
+     * 입력받은 lat, lng 에서 가까운 순으로 Size 만큼의 식당의 목록을 반환합니다.
      * @param username 사용자 id
      * @param lat 경도
      * @param lng 위도
      * @param page 몇번째 page 인지
      * @param size 하나의 page 크기
-     * @return 성공시 응답
+     * @return meta정보, 썸네일을 포함한 식당정보 목록
      */
     public Map<String, Object> getMapRestaurants(String username, Double lat, Double lng, Integer page, Integer size) throws RestaurantNotFoundException, InvalidParameterException {
         Account account = accountRepository.findByUserName(username).orElseThrow(()->new AccountNotFoundException());

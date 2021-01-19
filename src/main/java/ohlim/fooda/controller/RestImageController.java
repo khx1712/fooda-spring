@@ -2,7 +2,6 @@ package ohlim.fooda.controller;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import ohlim.fooda.domain.RestImage;
 import ohlim.fooda.dto.SuccessResponse;
 import ohlim.fooda.error.exception.RestImageNotFoundException;
 import ohlim.fooda.service.RestImageService;

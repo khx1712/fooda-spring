@@ -1,41 +1,31 @@
 package ohlim.fooda.controller;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import ohlim.fooda.domain.Token;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import ohlim.fooda.dto.SuccessResponse;
 import ohlim.fooda.dto.user.AccountDto;
 import ohlim.fooda.dto.user.LoginDto;
 import ohlim.fooda.dto.user.TokenPairDto;
-import ohlim.fooda.jwt.JwtTokenUtil;
-import ohlim.fooda.repository.AccountRepository;
-import ohlim.fooda.repository.FolderRepository;
 import ohlim.fooda.service.AccountService;
-import ohlim.fooda.service.FolderService;
-import ohlim.fooda.service.JwtUserDetailsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-
+@Api(tags = {"Account API"})
 @RestController
 public class AccountController {
     private Logger logger = LoggerFactory.getLogger(ApplicationRunner.class);
     @Autowired
     private AccountService accountService;
 
-
+    @ApiOperation(value = "유저 삭제", notes = "유저를 삭제합니다.")
     @PostMapping(path="/admin/deleteUser")
     public ResponseEntity<?> deleteUser (@RequestBody Map<String, String> m) {
         return new ResponseEntity<>(SuccessResponse.builder()
@@ -44,6 +34,7 @@ public class AccountController {
                 ,HttpStatus.OK);
     }
 
+    @ApiOperation(value = "유저 목록", notes = "유저 목록을 제공합니다.")
     @GetMapping(path="/admin/users")
     public ResponseEntity<?> getAllUsers() {
         return new ResponseEntity<>(SuccessResponse.builder()
@@ -52,6 +43,7 @@ public class AccountController {
                 ,HttpStatus.OK);
     }
 
+    @ApiOperation(value = "유저 등록", notes = "유저 정보로 유저를 등록합니다.")
     @PostMapping(path="/newUser/add")
     public ResponseEntity<?> addNewUser (@RequestBody AccountDto accountDto) {
         Long accountId = accountService.addAccount(accountDto);
@@ -65,6 +57,7 @@ public class AccountController {
                 , HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "유저 아이디 중복 검사", notes = "유저의 아이디가 중복되었는지 검사합니다.")
     @PostMapping(path="/newUser/checkId/{userName}")
     public ResponseEntity<?> checkId (
             @PathVariable("userName") String userName) {
@@ -75,6 +68,7 @@ public class AccountController {
                 , HttpStatus.OK);
     }
 
+    @ApiOperation(value = "유저 이메일 중복 검사", notes = "유저의 이메일 중복되었는지 검사합니다.")
     @PostMapping(path="/newUser/checkEmail/{email}")
     public ResponseEntity<?> checkEmail (
             @PathVariable("email") String email){
@@ -85,6 +79,7 @@ public class AccountController {
                 , HttpStatus.OK);
     }
 
+    @ApiOperation(value = "유저 로그인", notes = "아이디와 비밀번호로 로그인합니다.")
     @PostMapping(path = "/newUser/login")
     public ResponseEntity<?> login(@RequestBody LoginDto loginDto) throws Exception {
         TokenPairDto tokenPairDto = accountService.loginAccount(loginDto);
@@ -95,7 +90,8 @@ public class AccountController {
                 , HttpStatus.OK);
     }
 
-    @PostMapping(path="/user/logout")
+    @ApiOperation(value = "유저 로그아웃", notes = "accessToken, refreshToken으로 로그아웃 합니다.")
+    @PostMapping(path="/newUser/logout")
     public ResponseEntity<?> logout(
             @RequestBody TokenPairDto tokenPairDto
     ) {
@@ -106,7 +102,8 @@ public class AccountController {
                 , HttpStatus.OK);
     }
 
-    @PostMapping(path="/user/refresh")
+    @ApiOperation(value = "토큰 재발급", notes = "만료된 accessToken을 재발급 받습니다.")
+    @PostMapping(path="/newUser/refresh")
     public ResponseEntity<?>  requestForNewAccessToken(
             @RequestBody TokenPairDto tokenPairDto
     ) {

@@ -74,10 +74,13 @@ public class RestaurantController {
         if(bindingResult.hasErrors()) {
             throw new InvalidParameterException(bindingResult);
         }
+        Long restaurantId = restaurantService.updateRestaurant(id, resource);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
                 .message("'"+id.toString()+"' 식당을 수정하였습니다.")
-                .documents(restaurantService.updateRestaurant(id, resource)).build()
+                .meta(new HashMap<String, Long>(){{
+                    put("restaurantId", restaurantId);
+                }}).build()
                 ,HttpStatus.OK);
     }
 

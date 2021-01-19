@@ -1,12 +1,9 @@
 package ohlim.fooda.domain;
 
-import javassist.NotFoundException;
 import lombok.*;
-import ohlim.fooda.dto.restaurant.RestaurantDto;
 import ohlim.fooda.dto.user.AccountDto;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.json.simple.parser.ParseException;
 
 import javax.persistence.*;
 import javax.validation.constraints.Pattern;

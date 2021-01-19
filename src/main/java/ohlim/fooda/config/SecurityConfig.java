@@ -72,13 +72,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
 
-    // AuthenticationManager가 UserDetail의 password가 암호화되어 저장되있다는 것을 알 수 있도록 해준다.
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(jwtUserDetailsService).passwordEncoder(passwordEncoder());
-    }
+//    // AuthenticationManager가 UserDetail의 password가 암호화되어 저장되있다는 것을 알 수 있도록 해준다.
+//    @Autowired
+//    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.userDetailsService(jwtUserDetailsService).passwordEncoder(passwordEncoder());
+//    }
 
-    // 비밀번호를 암호화해서 저장할 수 있도록 암호화 함수.
+    // 비밀번호를 암호화해서 저장할 수 있도록 암호화 객체.
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

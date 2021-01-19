@@ -23,7 +23,12 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +42,7 @@ import java.util.regex.Pattern;
 
 @Service
 @Transactional
-public class AccountService {
+public class AccountService implements UserDetailsService {
     private Logger logger = LoggerFactory.getLogger(ApplicationRunner.class);
 
     AccountRepository accountRepository;
@@ -46,8 +51,6 @@ public class AccountService {
 
     @Autowired
     private AuthenticationManager am;
-    @Autowired
-    private JwtUserDetailsService userDetailsService;
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
@@ -61,7 +64,24 @@ public class AccountService {
         this.folderRepository = folderRepository;
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Account account = accountRepository.findByUserName(username)
+                .orElseThrow(()-> new UsernameNotFoundException("User not found with username: " + username));
+        List<GrantedAuthority> roles = new ArrayList<>();
+        if ((account.getRole()).equals("ROLE_ADMIN")) {
+            roles.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        } else {
+            roles.add(new SimpleGrantedAuthority("ROLE_USER"));
+            roles.add(new SimpleGrantedAuthority("ROLE_HI"));
+        }
+        return new User(account.getUserName(), account.getPassword(), roles);
+    }
 
+    /**
+     * 회원가입된 유저목록을 불러옵니다.
+     * @return 등록된 유저 정보 목록
+     */
     public List<AccountDto> getAllAccount() {
         Iterable<Account> accounts = accountRepository.findAll();
         List<AccountDto> accountDtoList = new ArrayList<>();
@@ -71,10 +91,20 @@ public class AccountService {
         return accountDtoList;
     }
 
+    /**
+     * 아이디에 해당하는 유저를 삭제합니다.
+     * @param username 사용자 아이디
+     * @return 삭제된 user_id
+     */
     public Long deleteAccount(String username) {
         return accountRepository.deleteByUserName(username);
     }
 
+    /**
+     * 유저정보를 바탕으로 유저를 저장합니다, 기본폴더를 생성합니다.
+     * @param accountDto 유저 정보
+     * @return 등록된 user_id
+     */
     public Long addAccount(AccountDto accountDto) {
         checkDuplicateUserName(accountDto.getUserName());
         Account account = Account.createAccount(accountDto);
@@ -90,31 +120,45 @@ public class AccountService {
         return account.getId();
     }
 
+    /**
+     * 유저 아이디가 이미 존재한다면 exception 발생시킵니다.
+     * @param userName 유저 아이디
+     */
     public void checkDuplicateUserName(String userName) {
         if (accountRepository.findByUserName(userName).isPresent()){
             throw new DuplicateUserNameException();
         }
     }
 
+    /**
+     * 유저 이메일이 이미 존재한다면 exception 발생시킵니다.
+     * @param email 유저 이메일
+     */
     public void checkDuplicateEmail(String email) {
         if(accountRepository.findByEmail(email) != null){
             throw new DuplicateEmailException();
         }
     }
 
+    /**
+     * 로그인 정보가 유효하다면 token들을 생성하고 refreshToken을 저장하여 로그인 처리를 해줍니다.
+     * @param loginDto 로그인 정보
+     * @return accessToken, refreshToken
+     */
     public TokenPairDto loginAccount(LoginDto loginDto) {
         final String username = loginDto.getUserName();
+        String password = bcryptEncoder.encode(loginDto.getPassword());
         logger.info("test input username: " + username);
 
         // 아이디, 비밀번호의 유효성 검증
         try {
-            am.authenticate(new UsernamePasswordAuthenticationToken(username, loginDto.getPassword()));
+            am.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         } catch (BadCredentialsException e){ // 아이디, 비밀번호가 잘못됬음
             e.printStackTrace();
         }
 
         // 토큰 생성
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        final UserDetails userDetails = loadUserByUsername(username);
         final String accessToken = jwtTokenUtil.generateAccessToken(userDetails);
         final String refreshToken = jwtTokenUtil.generateRefreshToken(username);
 
@@ -131,6 +175,10 @@ public class AccountService {
                 accessToken,refreshToken);
     }
 
+    /**
+     * 토큰들을 받아 refreshToken을 삭제하여 로그아웃 시킵니다.
+     * @param tokenPairDto 토큰 pair
+     */
     public void logoutAccount(TokenPairDto tokenPairDto) {
         String userName = null;
         String accessToken = tokenPairDto.getAccessToken();
@@ -157,6 +205,11 @@ public class AccountService {
         redisTemplate.expire(accessToken, 10*6*1000, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * 토큰들을 받아 refreshToken으로 새로운 accessToken울 반환합니다.
+     * @param tokenPairDto 토큰 pair
+     * @return new accessToken, refreshToken
+     */
     public TokenPairDto tokenRefresh(TokenPairDto tokenPairDto) {
 
         String accessToken = tokenPairDto.getAccessToken();
@@ -174,7 +227,7 @@ public class AccountService {
 
             //둘이 일치하고 만료도 안됐으면 재발급
             if (refreshToken.equals(refreshTokenFromRedis) && !jwtTokenUtil.isTokenExpired(refreshToken)) {
-                final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                final UserDetails userDetails = loadUserByUsername(username);
                 accessToken =  jwtTokenUtil.generateAccessToken(userDetails);
             } else {
                 throw new ExpiredRefreshTokenException();
