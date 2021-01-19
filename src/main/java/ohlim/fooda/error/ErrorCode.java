@@ -3,19 +3,21 @@ package ohlim.fooda.error;
 
 public enum ErrorCode {
     INVALID_PARAMETER(400, null, "Invalid Request Data"),
-    RESTAURANT_NOT_FOUND(401, "C001", "Restaurant Not Found"),
-    REST_IMAGE_NOT_FOUND(402, "C002", "RestImage Not Found"),
-    ACCOUNT_NOT_FOUND(402, "C005", "Account Not Found"),
-    FOLDER_NOT_FOUND(402, "C003", "Folder Not Found"),
-    FOLDER_NOT_EMPTY(402, "C005", "Folder Not Empty"),
-    INVALID_LOCATION(402, "C004", "Invalid Location"),
-    DUPLICATE_USERNAME(402, "C006", "Duplicate UserName"),
-    DUPLICATE_EMAIL(402, "C006", "Duplicate Email"),
-    NON_LOGIN(402, "D001", "Non Login"),
-    INVALID_TOKEN(402, "D002","Invalid Token"),
-    EXPIRED_ACCESS_TOKEN(402, "D003", "Expired AccessToken"),
-    ACCESS_DENIED(402, "D004", "Access Denied"),
-    EXPIRED_REFRESH_TOKEN(402, "C0010", "Expired RefreshToken");
+    RESTAURANT_NOT_FOUND(406, "C001", "Restaurant Not Found"),
+    REST_IMAGE_NOT_FOUND(406, "C002", "RestImage Not Found"),
+    ACCOUNT_NOT_FOUND(406, "C003", "Account Not Found"),
+    FOLDER_NOT_FOUND(406, "C004", "Folder Not Found"),
+    FOLDER_NOT_EMPTY(409, "C005", "Folder Not Empty"),
+    INVALID_LOCATION(406, "C006", "Invalid Location"),
+    DUPLICATE_USERNAME(400, "C007", "Duplicate UserName"),
+    DUPLICATE_EMAIL(400, "C008", "Duplicate Email"),
+    NON_LOGIN(401, "D001", "Non Login"),
+    INVALID_ACCESS_TOKEN(401, "D002","Invalid Access Token"),
+    EXPIRED_ACCESS_TOKEN(401, "D003", "Expired AccessToken"),
+    ACCESS_DENIED(403, "D004", "Access Denied"),
+    INVALID_REFRESH_TOKEN(401, "C009","Invalid Access Token"),
+    EXPIRED_REFRESH_TOKEN(401, "C010", "Expired RefreshToken"),
+    NO_REFRESH_TOKEN(401, "C011", "No Refresh Token");
 
     private final String code;
     private final String message;

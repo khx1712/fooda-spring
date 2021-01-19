@@ -2,13 +2,9 @@ package ohlim.fooda.jwt;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import ohlim.fooda.error.ErrorCode;
 import ohlim.fooda.service.JwtUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -67,6 +63,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     String jwtToken = requestTokenHeader.substring(7);
                     String username = jwtTokenUtil.getUsername(jwtToken);
                     List<String> roles = jwtTokenUtil.getRoles(jwtToken);
+                    if(redisTemplate.opsForValue().get(username) == null){
+                        throw new JwtException("이미 로그아웃 되었습니다.");
+                    }
 
                     Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();
                     for (String role : roles) {
@@ -85,7 +84,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             httpServletRequest.setAttribute("exception", ErrorCode.EXPIRED_ACCESS_TOKEN.getCode());
         }catch (JwtException e){
             e.printStackTrace();
-            httpServletRequest.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
+            httpServletRequest.setAttribute("exception", ErrorCode.INVALID_ACCESS_TOKEN.getCode());
         }
         filterChain.doFilter(httpServletRequest, httpServletResponse);
     }

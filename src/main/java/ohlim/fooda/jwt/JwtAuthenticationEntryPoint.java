@@ -24,8 +24,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
             setErrorResponse(httpServletResponse, ErrorCode.NON_LOGIN);
         }else if(exception.equals(ErrorCode.EXPIRED_ACCESS_TOKEN.getCode())){
             setErrorResponse(httpServletResponse, ErrorCode.EXPIRED_ACCESS_TOKEN);
-        }else if(exception.equals(ErrorCode.INVALID_TOKEN.getCode())){
-            setErrorResponse(httpServletResponse, ErrorCode.INVALID_TOKEN);
+        }else if(exception.equals(ErrorCode.INVALID_ACCESS_TOKEN.getCode())){
+            setErrorResponse(httpServletResponse, ErrorCode.INVALID_ACCESS_TOKEN);
         }
 
     }

@@ -30,27 +30,10 @@ import java.util.Map;
 
 
 @RestController
-@CrossOrigin
-public class MainController {
+public class AccountController {
     private Logger logger = LoggerFactory.getLogger(ApplicationRunner.class);
     @Autowired
     private AccountService accountService;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private FolderRepository folderRepository;
-    @Autowired
-    RedisTemplate<String, Object> redisTemplate;
-    @Autowired
-    private JwtUserDetailsService userDetailsService;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-    @Autowired
-    private AuthenticationManager am;
-    @Autowired
-    private PasswordEncoder bcryptEncoder;
-    @Autowired
-    private FolderService folderService;
 
 
     @PostMapping(path="/admin/deleteUser")
@@ -112,7 +95,7 @@ public class MainController {
                 , HttpStatus.OK);
     }
 
-    @PostMapping(path="/newUser/logout")
+    @PostMapping(path="/user/logout")
     public ResponseEntity<?> logout(
             @RequestBody TokenPairDto tokenPairDto
     ) {
@@ -123,56 +106,17 @@ public class MainController {
                 , HttpStatus.OK);
     }
 
-    @PostMapping(path="/newUser/refresh")
-    public Map<String, Object>  requestForNewAccessToken(@RequestBody Map<String, String> m) {
-        String accessToken = null;
-        String refreshToken = null;
-        String refreshTokenFromDb = null;
-        String username = null;
-        Map<String, Object> map = new HashMap<>();
-        try {
-            accessToken = m.get("accessToken");
-            refreshToken = m.get("refreshToken");
-            logger.info("access token in rnat: " + accessToken);
-            try {
-                username = jwtTokenUtil.getUsername(accessToken);
-            } catch (IllegalArgumentException e) {
-
-            } catch (ExpiredJwtException e) { //expire 됐을 때
-                username = e.getClaims().getSubject();
-                logger.info("username from expired access token: " + username);
-            }
-
-            if (refreshToken != null) { //refresh를 같이 보내면
-                try {
-                    ValueOperations<String, Object> vop = redisTemplate.opsForValue();
-                    Token result = (Token) vop.get(username);
-                    refreshTokenFromDb = result.getRefreshToken();
-                    logger.info("rtfrom db: " + refreshTokenFromDb);
-                } catch (IllegalArgumentException e) {
-                    logger.warn("illegal argument!!");
-                }
-                //둘이 일치하고 만료도 안됐으면 재발급
-                if (refreshToken.equals(refreshTokenFromDb) && !jwtTokenUtil.isTokenExpired(refreshToken)) {
-                    final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    String newtok =  jwtTokenUtil.generateAccessToken(userDetails);
-                    map.put("success", true);
-                    map.put("accessToken", newtok);
-                } else {
-                    map.put("success", false);
-                    map.put("msg", "refresh token is expired.");
-                }
-            } else { //refresh token이 없다 재 로그인 해야됨
-                map.put("success", false);
-                map.put("msg", "your refresh token does not exist.");
-            }
-
-        } catch (Exception e) {
-            throw e;
-        }
-        logger.info("m: " + m);
-
-        return map;
+    @PostMapping(path="/user/refresh")
+    public ResponseEntity<?>  requestForNewAccessToken(
+            @RequestBody TokenPairDto tokenPairDto
+    ) {
+        TokenPairDto newTokenPairDto = accountService.tokenRefresh(tokenPairDto);
+        return new ResponseEntity<>(
+                SuccessResponse.builder()
+                        .message("새로운 accessToken입니다.")
+                        .documents(newTokenPairDto)
+                        .build()
+                , HttpStatus.OK);
     }
 
 }

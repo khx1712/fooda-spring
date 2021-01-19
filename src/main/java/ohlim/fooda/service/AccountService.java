@@ -9,6 +9,8 @@ import ohlim.fooda.dto.user.LoginDto;
 import ohlim.fooda.dto.user.TokenPairDto;
 import ohlim.fooda.error.exception.DuplicateEmailException;
 import ohlim.fooda.error.exception.DuplicateUserNameException;
+import ohlim.fooda.error.exception.ExpiredRefreshTokenException;
+import ohlim.fooda.error.exception.NoRefreshTokenException;
 import ohlim.fooda.jwt.JwtTokenUtil;
 import ohlim.fooda.repository.AccountRepository;
 import ohlim.fooda.repository.FolderRepository;
@@ -27,7 +29,9 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -151,5 +155,34 @@ public class AccountService {
         //cache logout token for 10 minutes! : accessToken을 10분 뒤에 만료시킨다.
         redisTemplate.opsForValue().set(accessToken, true);
         redisTemplate.expire(accessToken, 10*6*1000, TimeUnit.MILLISECONDS);
+    }
+
+    public TokenPairDto tokenRefresh(TokenPairDto tokenPairDto) {
+
+        String accessToken = tokenPairDto.getAccessToken();
+        String refreshToken = tokenPairDto.getRefreshToken();
+        String username = jwtTokenUtil.getUsername(accessToken);
+
+        if (refreshToken != null) {
+            ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+            Token result = (Token) valueOperations.get(username);
+            if(result == null){
+                throw new ExpiredRefreshTokenException();
+            }
+            String refreshTokenFromRedis = result.getRefreshToken();
+            logger.info("rtfrom db: " + refreshTokenFromRedis);
+
+            //둘이 일치하고 만료도 안됐으면 재발급
+            if (refreshToken.equals(refreshTokenFromRedis) && !jwtTokenUtil.isTokenExpired(refreshToken)) {
+                final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                accessToken =  jwtTokenUtil.generateAccessToken(userDetails);
+            } else {
+                throw new ExpiredRefreshTokenException();
+            }
+        } else { //refresh token이 없다 재 로그인 해야됨
+            throw new NoRefreshTokenException();
+        }
+
+        return TokenPairDto.createTokenPairDto(accessToken, refreshToken);
     }
 }
