@@ -4,94 +4,80 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
-import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.*;
-import java.util.function.Function;
 
-//@Component
-public class JwtTokenUtil implements Serializable {
+@Component
+public class JwtTokenUtil{
 
-    private Key key;
-    private static final long serialVersionUID = -2550185165626007488L;
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
+
     public static final long JWT_ACCESS_TOKEN_VALIDITY = 24 * 60 * 60 * 7; //일주일
     public static final long JWT_REFRESH_TOKEN_VALIDITY = 24 * 60 * 60 * 30; //30일
 
-    public JwtTokenUtil(String secret) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    // 비밀키에 서명을 한다.
+    private Key getSigningKey(String secretKey) {
+        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    //retrieve username from jwt token
-    public String getUsernameFromToken(String token) {
-        return getClaimFromToken(token, Claims::getSubject);
+    // jwt token의 payload에서 Claims을 추출합니다.
+    public Claims extractAllClaims(String token){
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey(SECRET_KEY))
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        System.out.println(claims);
+        return claims;
     }
 
-    //retrieve expiration date from jwt token
-    public Date getExpirationDateFromToken(String token) {
-        return getClaimFromToken(token, Claims::getExpiration);
+    // jwt token에서 userName을 가져옵니다.
+    public String getUsername(String token) {
+        return extractAllClaims(token).getSubject();
     }
-
-    public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = getAllClaimsFromToken(token);
-        return claimsResolver.apply(claims);
-    }
-    //for retrieveing any information from token we will need the secret key
-    private Claims getAllClaimsFromToken(String token) {
-        return Jwts.parser().setSigningKey(key).parseClaimsJws(token).getBody();
-    }
-
-
-    public Map<String, Object> getUserParseInfo(String token) {
-        Claims parseInfo = Jwts.parser().setSigningKey(key).parseClaimsJws(token).getBody();
-        Map<String, Object> result = new HashMap<>();
-        result.put("username", parseInfo.getSubject());
-        result.put("role", parseInfo.get("role", List.class));
-        return result;
-    }
-
-    //check if the token has expired
+    
+    // jwt token이 만료되었는지 확인합니다.
     public Boolean isTokenExpired(String token) {
-        final Date expiration = getExpirationDateFromToken(token);
+        final Date expiration = extractAllClaims(token).getExpiration();
         return expiration.before(new Date());
     }
 
-    //generate token for user
-    public String generateAccessToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        List<String> li = new ArrayList<>();
-        for (GrantedAuthority a: userDetails.getAuthorities()) {
-            li.add(a.getAuthority());
-        }
-        claims.put("role",li);
-        return Jwts.builder().setClaims(claims).setSubject(userDetails.getUsername()).setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_ACCESS_TOKEN_VALIDITY * 1000))
-                .signWith(key, SignatureAlgorithm.HS256).compact();
+    // jwt token에서 권한을 가져옵니다.
+    public List<String> getRoles(String token) {
+        return extractAllClaims(token).get("role", List.class);
     }
 
+    // accessToken을 생성합니다.
+    public String generateAccessToken(UserDetails userDetails) {
+        Claims claims = Jwts.claims();
+        List<String> roles = new ArrayList<>();
+        for (GrantedAuthority grantedAuthority: userDetails.getAuthorities()) {
+            roles.add(grantedAuthority.getAuthority());
+        }
+        claims.put("role",roles);
+        return Jwts.builder().setClaims(claims).setSubject(userDetails.getUsername()).setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_ACCESS_TOKEN_VALIDITY * 1000))
+                .signWith(getSigningKey(SECRET_KEY), SignatureAlgorithm.HS256).compact();
+    }
+
+    // refreshToken을 생성합니다.
     public String generateRefreshToken(String username) {
         return Jwts.builder().setSubject(username).setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_REFRESH_TOKEN_VALIDITY * 1000))
-                .signWith(key, SignatureAlgorithm.HS256).compact();
-    }
-    //while creating the token -
-//1. Define  claims of the token, like Issuer, Expiration, Subject, and the ID
-//2. Sign the JWT using the HS512 algorithm and secret key.
-//3. According to JWS Compact Serialization(https://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41#section-3.1)
-//   compaction of the JWT to a URL-safe string
-    /*
-    private String doGenerateToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-                .signWith(SignatureAlgorithm.HS512, secret).compact();
-    }
-     */
-    //validate token
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+                .signWith(getSigningKey(SECRET_KEY), SignatureAlgorithm.HS256).compact();
     }
 
+    // token이 유효한지(token의 claims의 userName과 사용자 아이디가 일치하는지, token이 만료되었는지) 확인합니다.
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        final String username = getUsername(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
 }

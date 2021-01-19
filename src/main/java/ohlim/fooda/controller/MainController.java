@@ -21,15 +21,12 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 
 @RestController
@@ -110,7 +107,7 @@ public class MainController {
         TokenPairDto tokenPairDto = accountService.loginAccount(loginDto);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
-                        .message("로그인 되었습니다.")
+                        .message("'"+loginDto.getUserName()+"'가 로그인 되었습니다.")
                         .documents(tokenPairDto).build()
                 , HttpStatus.OK);
     }
@@ -138,7 +135,7 @@ public class MainController {
             refreshToken = m.get("refreshToken");
             logger.info("access token in rnat: " + accessToken);
             try {
-                username = jwtTokenUtil.getUsernameFromToken(accessToken);
+                username = jwtTokenUtil.getUsername(accessToken);
             } catch (IllegalArgumentException e) {
 
             } catch (ExpiredJwtException e) { //expire 됐을 때

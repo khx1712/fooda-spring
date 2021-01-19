@@ -14,6 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH");
     }
 
+    // project resource 접근 경로를 잡아준다.
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry){
         registry.addResourceHandler("/restImages/**")

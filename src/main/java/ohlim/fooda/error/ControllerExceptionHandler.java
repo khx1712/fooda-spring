@@ -49,7 +49,6 @@ public class ControllerExceptionHandler {
         final ErrorResponse response
                 = ErrorResponse
                 .create()
-
                 .status(errorCode.getStatus())
                 .code(errorCode.getCode())
                 .message(e.toString());

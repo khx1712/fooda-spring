@@ -1,6 +1,10 @@
 package ohlim.fooda.jwt;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
+import ohlim.fooda.error.ErrorCode;
 import ohlim.fooda.service.JwtUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -24,82 +28,65 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
-
-    @Autowired
-    JwtTokenUtil jtu;
-
     @Autowired
     RedisTemplate<String, Object> redisTemplate;
-
     @Autowired
     private JwtUserDetailsService jwtUserDetailsService;
 
-    public Authentication getAuthentication(String token) {
-        Map<String, Object> parseInfo = jtu.getUserParseInfo(token);
-        System.out.println("parseinfo: " + parseInfo);
-        List<String> rs =(List)parseInfo.get("role");
-        Collection<GrantedAuthority> tmp= new ArrayList<>();
-        for (String a: rs) {
-            tmp.add(new SimpleGrantedAuthority(a));
-        }
-        UserDetails userDetails = User.builder().username(String.valueOf(parseInfo.get("username"))).authorities(tmp).password("asd").build();
-        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-        return usernamePasswordAuthenticationToken;
-    }
-
+    /* spring boot에서 filter를 Bean으로 등록해주는 code이다.
+        현재 버전에서는 등록하지 않아도 filder를 사용가능한듯하다 나중에 문제 없으면 삭제하자
     @Bean
     public FilterRegistrationBean JwtRequestFilterRegistration (JwtRequestFilter filter) {
         FilterRegistrationBean registration = new FilterRegistrationBean(filter);
         registration.setEnabled(false);
         return registration;
     }
+    */
 
+    // "Authentication" 에 담겨오는 accessToken의 유효성을 판단하고,
+    // UserDetail이 들어간 Autentication으로 만들어 다음 filter chain으로 넘겨준다.
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
-        System.out.println("REQUEST : " + request.getHeader("Authorization"));
-        String requestTokenHeader = request.getHeader("Authorization");
-
+        String requestTokenHeader = httpServletRequest.getHeader("Authorization");
         logger.info("tokenHeader: " + requestTokenHeader);
-        String username = null;
-        String jwtToken = null;
 
-        // access token 이 존재하는 경우
-        if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
-            jwtToken = requestTokenHeader.substring(7);
-            logger.info("token in requestfilter: " + jwtToken);
+        try {
+            if (requestTokenHeader != null) {
+                if (!requestTokenHeader.startsWith("Bearer ")) {
+                    throw new JwtException("Bearer 로 시작하지 않습니다.");
+               } else {
+                    String jwtToken = requestTokenHeader.substring(7);
+                    String username = jwtTokenUtil.getUsername(jwtToken);
+                    List<String> roles = jwtTokenUtil.getRoles(jwtToken);
 
-            try {
-                username = jwtTokenUtil.getUsernameFromToken(jwtToken);
-            } catch (IllegalArgumentException e) {
-                logger.warn("Unable to get JWT Token");
+                    Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+                    for (String role : roles) {
+                        grantedAuthorities.add(new SimpleGrantedAuthority(role));
+                    }
+                    UserDetails userDetails = User.builder().username(username)
+                            .authorities(grantedAuthorities).password("Garbage").build();
+                    Authentication authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    httpServletResponse.setHeader("username", username);
+                }
             }
-            catch (ExpiredJwtException e) {
-            }
-        } else {
-            logger.warn("JWT Token does not begin with Bearer String");
+        }catch (ExpiredJwtException e){
+            e.printStackTrace();
+            httpServletRequest.setAttribute("exception", ErrorCode.EXPIRED_ACCESS_TOKEN.getCode());
+        }catch (JwtException e){
+            e.printStackTrace();
+            httpServletRequest.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
         }
-
-        if (username == null) {
-            logger.info("token maybe expired: username is null.");
-        } else if (redisTemplate.opsForValue().get(jwtToken) != null) {
-            logger.warn("this token already logout!");
-        } else {
-            //DB access 대신에 파싱한 정보로 유저 만들기!
-            Authentication authen =  getAuthentication(jwtToken);
-            //만든 authentication 객체로 매번 인증받기
-            SecurityContextHolder.getContext().setAuthentication(authen);
-            response.setHeader("username", username);
-        }
-        chain.doFilter(request, response);
+        filterChain.doFilter(httpServletRequest, httpServletResponse);
     }
 }

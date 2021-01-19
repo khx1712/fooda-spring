@@ -2,9 +2,7 @@ package ohlim.fooda.error;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 
@@ -51,10 +49,6 @@ public class ErrorResponse {
         setCustomFieldErrors(errors.getFieldErrors());
         return this;
     }
-
-/*
-getter 생략
-*/
 
     //BindingResult.getFieldErrors() 메소드를 통해 전달받은 fieldErrors
     public void setCustomFieldErrors(List<FieldError> fieldErrors) {

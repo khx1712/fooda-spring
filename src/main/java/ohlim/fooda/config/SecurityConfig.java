@@ -1,10 +1,9 @@
 package ohlim.fooda.config;
 
+import ohlim.fooda.jwt.JwtAccessDeniedHandler;
 import ohlim.fooda.jwt.JwtAuthenticationEntryPoint;
 import ohlim.fooda.jwt.JwtRequestFilter;
-import ohlim.fooda.jwt.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,25 +23,19 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-
-    @Value("${jwt.secret}")
-    private String secret;
-
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
     private UserDetailsService jwtUserDetailsService;
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @Autowired
+    private JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
-    private static final String[] AUTH_LIST = {
+    // 접근 권한이 없는 경로 list
+    private static final String[] AUTH_ALL_LIST = {
             // swagger ui 접근
-            "/swagger-resources/**",
-            "/swagger/**",
-            "/swagger-ui.html/**",
-            "/v2/api-docs",
-            "/webjars/**",
-            "/csrf/**",
+            "/swagger-resources/**", "/swagger/**", "/swagger-ui.html/**", "/v2/api-docs", "/webjars/**", "/csrf/**",
             // image url 접근
             "/restImages/**",
             // 새로운 사용자 접근
@@ -53,54 +46,48 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception
     {
-
-        http.
-                httpBasic().disable().
-                cors().and().
-                csrf().disable().
-                sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).
-                and().
-                authorizeRequests().
-                antMatchers(AUTH_LIST).permitAll().
-                and().
-                authorizeRequests().
-                antMatchers("/admin/**").hasRole("ADMIN").
-                and().
-                authorizeRequests().
-                antMatchers("/user/**").hasAnyRole("USER", "ADMIN").
-                and().
-                authorizeRequests().
-                anyRequest().
-                authenticated().
-                and().
-                exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).
-                and().
-                addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+        http
+                .httpBasic().disable()
+                .cors().and()
+                .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .authorizeRequests()
+                .antMatchers(AUTH_ALL_LIST).permitAll()
+                .and()
+                .authorizeRequests()
+                .antMatchers("/admin/**").hasRole("ADMIN")
+                .and()
+                .authorizeRequests()
+                .antMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                .and()
+                .authorizeRequests()
+                .anyRequest()
+                .authenticated()
+                .and()
+                .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .accessDeniedHandler(jwtAccessDeniedHandler)
+                .and()
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
 
+    // AuthenticationManager가 UserDetail의 password가 암호화되어 저장되있다는 것을 알 수 있도록 해준다.
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        // configure AuthenticationManager so that it knows from where to load
-        // user for matching credentials
-        // Use BCryptPasswordEncoder
         auth.userDetailsService(jwtUserDetailsService).passwordEncoder(passwordEncoder());
     }
 
+    // 비밀번호를 암호화해서 저장할 수 있도록 암호화 함수.
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // Authentication을 관리해준다
     @Bean
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
-
-    @Bean
-    public JwtTokenUtil jwtTokenUtil(){
-        return new JwtTokenUtil(secret);
-    }
-
 }

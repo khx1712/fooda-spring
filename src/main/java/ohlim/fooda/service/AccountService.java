@@ -19,12 +19,15 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -55,8 +58,13 @@ public class AccountService {
     }
 
 
-    public Iterable<Account> getAllAccount() {
-        return accountRepository.findAll();
+    public List<AccountDto> getAllAccount() {
+        Iterable<Account> accounts = accountRepository.findAll();
+        List<AccountDto> accountDtoList = new ArrayList<>();
+        for(Account account : accounts){
+            accountDtoList.add(AccountDto.createAccountDto(account));
+        }
+        return accountDtoList;
     }
 
     public Long deleteAccount(String username) {
@@ -97,8 +105,8 @@ public class AccountService {
         // 아이디, 비밀번호의 유효성 검증
         try {
             am.authenticate(new UsernamePasswordAuthenticationToken(username, loginDto.getPassword()));
-        } catch (Exception e){
-            throw e;
+        } catch (BadCredentialsException e){ // 아이디, 비밀번호가 잘못됬음
+            e.printStackTrace();
         }
 
         // 토큰 생성
@@ -116,7 +124,7 @@ public class AccountService {
         vop.set(username, retok);
 
         return TokenPairDto.createTokenPairDto(
-                jwtTokenUtil.generateAccessToken(userDetails),jwtTokenUtil.generateRefreshToken(username));
+                accessToken,refreshToken);
     }
 
     public void logoutAccount(TokenPairDto tokenPairDto) {
@@ -124,7 +132,7 @@ public class AccountService {
         String accessToken = tokenPairDto.getAccessToken();
         // TODO : token 만료 exception 처리 나중에 다시 고민해보기
         try {
-            userName = jwtTokenUtil.getUsernameFromToken(accessToken);
+            userName = jwtTokenUtil.getUsername(accessToken);
         } catch (IllegalArgumentException e) {} catch (ExpiredJwtException e) { //expire됐을 때
             userName = e.getClaims().getSubject();
             logger.info("username from expired access token: " + userName);

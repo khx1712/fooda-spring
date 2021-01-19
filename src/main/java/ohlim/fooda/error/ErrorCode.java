@@ -10,7 +10,12 @@ public enum ErrorCode {
     FOLDER_NOT_EMPTY(402, "C005", "Folder Not Empty"),
     INVALID_LOCATION(402, "C004", "Invalid Location"),
     DUPLICATE_USERNAME(402, "C006", "Duplicate UserName"),
-    DUPLICATE_EMAIL(402, "C006", "Duplicate Email");
+    DUPLICATE_EMAIL(402, "C006", "Duplicate Email"),
+    NON_LOGIN(402, "D001", "Non Login"),
+    INVALID_TOKEN(402, "D002","Invalid Token"),
+    EXPIRED_ACCESS_TOKEN(402, "D003", "Expired AccessToken"),
+    ACCESS_DENIED(402, "D004", "Access Denied"),
+    EXPIRED_REFRESH_TOKEN(402, "C0010", "Expired RefreshToken");
 
     private final String code;
     private final String message;

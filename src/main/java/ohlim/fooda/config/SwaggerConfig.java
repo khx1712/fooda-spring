@@ -23,10 +23,7 @@ public class SwaggerConfig{
     private String version;
     private String title;
 
-    /**
-     * swagger API 문서 생성
-     * @return
-     */
+    // swagger API 문서 생성
     @Bean
     public Docket api(){
         version = "V1.0.0";
@@ -40,12 +37,7 @@ public class SwaggerConfig{
                 .apiInfo(this.apiInfo(title, version));
     }
 
-    /**
-     * swagger 정보
-     * @param title 이름
-     * @param version 버전
-     * @return
-     */
+    // swagger 정보 입력
     private ApiInfo apiInfo(String title, String version){
         return new ApiInfoBuilder()
                 .title(title)
