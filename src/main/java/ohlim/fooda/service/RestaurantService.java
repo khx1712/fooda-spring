@@ -5,6 +5,7 @@ import ohlim.fooda.domain.Account;
 import ohlim.fooda.domain.Folder;
 import ohlim.fooda.domain.RestImage;
 import ohlim.fooda.domain.Restaurant;
+import ohlim.fooda.dto.restImage.RestImageDto;
 import ohlim.fooda.dto.restaurant.RestaurantDetailDto;
 import ohlim.fooda.dto.restaurant.RestaurantImageDto;
 import ohlim.fooda.dto.restaurant.RestaurantDto;
@@ -32,14 +33,16 @@ public class RestaurantService {
     private AccountRepository accountRepository;
     private RestImageRepository restImageRepository;
     private FolderRepository folderRepository;
+    private FileUtil fileUtil;
 
     @Autowired
     public RestaurantService(RestaurantRepository restaurantRepository, AccountRepository accountRepository,
-                             RestImageRepository restImageRepository, FolderRepository folderRepository) {
+                             RestImageRepository restImageRepository, FolderRepository folderRepository, FileUtil fileUtil) {
         this.restaurantRepository = restaurantRepository;
         this.accountRepository = accountRepository;
         this.restImageRepository = restImageRepository;
         this.folderRepository = folderRepository;
+        this.fileUtil = fileUtil;
     }
 
     /**
@@ -91,7 +94,8 @@ public class RestaurantService {
         restaurantRepository.save(restaurant);
         System.out.println(restaurant.getId());
         for(MultipartFile multipartFile: multipartFiles){
-            RestImage restImage = RestImage.createRestImage(multipartFile, restaurant);
+            RestImageDto restImageDto = fileUtil.uploadFile(multipartFile, restaurant.getId());
+            RestImage restImage = RestImage.createRestImage(restImageDto, restaurant);
             restImageRepository.save(restImage);
         }
         return restaurant.getId();

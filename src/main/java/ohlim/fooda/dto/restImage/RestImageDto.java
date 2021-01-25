@@ -15,7 +15,11 @@ public class RestImageDto {
     private String filePath;
     private String fileUrl;
     private String fileExt;
-    private  String contentType;
+    private String fileMiddlePath;
+    private String fileMiddleUrl;
+    private String fileThumbnailPath;
+    private String fileThumbnailUrl;
+    private String contentType;
 
     public static RestImageDto createRestImageDto(RestImage restImage){
         // TODO: ModelMapper 처리하기
@@ -23,10 +27,14 @@ public class RestImageDto {
                 .id(restImage.getId())
                 .fileSaveName(restImage.getFileSaveName())
                 .fileOriginName(restImage.getFileOriginName())
-                .filePath(restImage.getFilePath())
                 .contentType(restImage.getContentType())
-                .fileUrl(restImage.getFileUrl())
                 .fileExt(restImage.getFileExt())
+                .fileUrl(restImage.getFileUrl())
+                .filePath(restImage.getFilePath())
+                .fileMiddlePath(restImage.getFileMiddlePath())
+                .fileMiddleUrl(restImage.getFileMiddleUrl())
+                .fileThumbnailPath(restImage.getFileThumbnailPath())
+                .fileThumbnailUrl(restImage.getFileThumbnailUrl())
                 .build();
     }
 

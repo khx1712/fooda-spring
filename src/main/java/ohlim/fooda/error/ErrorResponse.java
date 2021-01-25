@@ -12,12 +12,13 @@ import java.util.List;
 
 @Getter
 public class ErrorResponse {
+
     private final Boolean success = false;
     private String message; //예외 메시지 저장
     private String code; // 예외를 세분화하기 위한 사용자 지정 코드,
     private int status; // HTTP 상태 값 저장 400, 404, 500 등..
 
-    //@Valid의 Parameter 검증을 통과하지 못한 필드가 담긴다.
+    // @Valid의 Parameter 검증을 통과하지 못한 필드가 담긴다.
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("errors")
     private List<CustomFieldError> customFieldErrors;
@@ -50,11 +51,9 @@ public class ErrorResponse {
         return this;
     }
 
-    //BindingResult.getFieldErrors() 메소드를 통해 전달받은 fieldErrors
+    // BindingResult.getFieldErrors() 메소드를 통해 전달받은 fieldErrors
     public void setCustomFieldErrors(List<FieldError> fieldErrors) {
-
         customFieldErrors = new ArrayList<>();
-
         fieldErrors.forEach(error -> {
             customFieldErrors.add(new CustomFieldError(
                     error.getCodes()[0],
@@ -64,7 +63,7 @@ public class ErrorResponse {
         });
     }
 
-    //parameter 검증에 통과하지 못한 필드가 담긴 클래스이다.
+    // parameter 검증에 통과하지 못한 필드가 담긴 클래스입니다.
     @Getter
     @Setter
     @Builder

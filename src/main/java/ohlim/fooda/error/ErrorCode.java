@@ -1,6 +1,8 @@
 package ohlim.fooda.error;
 
+import lombok.Getter;
 
+@Getter
 public enum ErrorCode {
     INVALID_PARAMETER(400, null, "Invalid Request Data"),
     RESTAURANT_NOT_FOUND(406, "C001", "Restaurant Not Found"),
@@ -22,18 +24,6 @@ public enum ErrorCode {
     private final String code;
     private final String message;
     private final int status;
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public int getStatus() {
-        return status;
-    }
 
     ErrorCode(final int status, final String code, final String message) {
         this.status = status;

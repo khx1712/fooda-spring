@@ -1,6 +1,8 @@
 package ohlim.fooda.controller;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import ohlim.fooda.dto.SuccessResponse;
 import ohlim.fooda.dto.user.AccountDto;
@@ -26,11 +28,11 @@ public class AccountController {
     private AccountService accountService;
 
     @ApiOperation(value = "유저 삭제", notes = "유저를 삭제합니다.")
-    @PostMapping(path="/admin/deleteUser")
-    public ResponseEntity<?> deleteUser (@RequestBody Map<String, String> m) {
+    @PostMapping(path="/admin/deleteUser/{userName}")
+    public ResponseEntity<?> deleteUser (@PathVariable("userName") String userName) {
         return new ResponseEntity<>(SuccessResponse.builder()
-                .message("사용자를 삭제하였습니다 : " + m.get("username") + ".")
-                .documents(accountService.deleteAccount(m.get("username"))).build()
+                .message("사용자를 삭제하였습니다 : " + userName + ".")
+                .documents(accountService.deleteAccount(userName)).build()
                 ,HttpStatus.OK);
     }
 

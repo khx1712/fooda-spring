@@ -4,6 +4,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import ohlim.fooda.domain.Account;
 import ohlim.fooda.domain.Folder;
 import ohlim.fooda.domain.Token;
+import ohlim.fooda.dto.user.AccountDetailDto;
 import ohlim.fooda.dto.user.AccountDto;
 import ohlim.fooda.dto.user.LoginDto;
 import ohlim.fooda.dto.user.TokenPairDto;
@@ -64,6 +65,12 @@ public class AccountService implements UserDetailsService {
         this.folderRepository = folderRepository;
     }
 
+    /**
+     * UserDetailsService에 있는 메소드를 override해서 사용한다.
+     * 유저의 아이디를 입력받아 아이디에 해당하는 유저를 가져온뒤 JWT, Authentication에서 사용할 UserDetail를 생성 후 반환한다.
+     * @param username 유저 아이디
+     * @return 아이디에 해당하는 UserDetail
+     */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account account = accountRepository.findByUserName(username)
@@ -82,13 +89,13 @@ public class AccountService implements UserDetailsService {
      * 회원가입된 유저목록을 불러옵니다.
      * @return 등록된 유저 정보 목록
      */
-    public List<AccountDto> getAllAccount() {
+    public List<AccountDetailDto> getAllAccount() {
         Iterable<Account> accounts = accountRepository.findAll();
-        List<AccountDto> accountDtoList = new ArrayList<>();
+        List<AccountDetailDto> accountDetailDtoList = new ArrayList<>();
         for(Account account : accounts){
-            accountDtoList.add(AccountDto.createAccountDto(account));
+            accountDetailDtoList.add(AccountDetailDto.createAccountDetailDto(account));
         }
-        return accountDtoList;
+        return accountDetailDtoList;
     }
 
     /**

@@ -21,7 +21,7 @@ import java.util.List;
 // TODO: component 로 제공했을 때  이점을 생각해보기
 //  component 는 entity 말고 service 에서 사용되는게 좋으므로 그 방식으로 코드 수정 요망
 @Component
-public class LocationToGPS {
+public class LocationUtil {
 
     public static String getGPSKakaoApiFromLocation(String location){
         String apiKey = "fb79115e278a86dc71d1de6675938a26";

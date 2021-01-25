@@ -22,11 +22,13 @@ public class RestImageService {
 
     private RestImageRepository restImageRepository;
     private RestaurantRepository restaurantRepository;
+    private FileUtil fileUtil;
 
     @Autowired
-    public RestImageService(RestImageRepository restImageRepository, RestaurantRepository restaurantRepository) {
+    public RestImageService(RestImageRepository restImageRepository, RestaurantRepository restaurantRepository, FileUtil fileUtil) {
         this.restaurantRepository = restaurantRepository;
         this.restImageRepository = restImageRepository;
+        this.fileUtil = fileUtil;
     }
 
     /**
@@ -60,7 +62,8 @@ public class RestImageService {
         Restaurant restaurant = restaurantRepository.findByUserNameAndId(userName, restaurantId);
         List<RestImageUrlDto> restImageUrlDtos = new ArrayList<>();
         for(MultipartFile multipartFile: multipartFiles){
-            RestImage restImage = RestImage.createRestImage(multipartFile, restaurant);
+            RestImageDto restImageDto = fileUtil.uploadFile(multipartFile, restaurantId);
+            RestImage restImage = RestImage.createRestImage(restImageDto, restaurant);
             restImageRepository.save(restImage);
             restImageUrlDtos.add(RestImageUrlDto.createRestImageUrlDto(restImage));
         }

@@ -26,7 +26,7 @@ public class ControllerExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
-    //@Valid 검증 실패 시 Catch
+    // @Valid 검증 실패 시 Catch합니다.
     @ExceptionHandler(InvalidParameterException.class)
     protected ResponseEntity<ErrorResponse> handleInvalidParameterException(InvalidParameterException e) throws URISyntaxException {
         logger.error("handleInvalidParameterException", e);
@@ -39,7 +39,7 @@ public class ControllerExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.resolve(errorCode.getStatus()));
     }
 
-    //CustomException을 상속받은 클래스가 예외를 발생 시킬 시, Catch하여 ErrorResponse를 반환한다.
+    // CustomException을 상속받은 클래스가 예외를 발생 시킬 시, Catch하여 ErrorResponse를 반환합니다.
     @ExceptionHandler(CustomException.class)
     protected ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
         logger.error("handleAllException", e);
@@ -55,7 +55,7 @@ public class ControllerExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.resolve(errorCode.getStatus()));
     }
 
-    //모든 예외를 핸들링하여 ErrorResponse 형식으로 반환한다.
+    // 위의 상황을 제외한 모든 예외를 핸들링하여 ErrorResponse 형식으로 반환합니다.
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handleException(Exception e) {
         logger.error("handleException", e);

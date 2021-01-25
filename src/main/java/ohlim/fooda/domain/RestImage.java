@@ -1,6 +1,7 @@
 package ohlim.fooda.domain;
 
 import lombok.*;
+import ohlim.fooda.dto.restImage.RestImageDto;
 import org.apache.commons.io.FileUtils;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +37,18 @@ public class RestImage {
     @Column(nullable = false, name = "file_url") // 파일의 URL
     private String fileUrl;
 
+    @Column(nullable = false, name = "file_middle_path") // 파일의 저장 경로
+    private String fileMiddlePath;
+
+    @Column(nullable = false, name = "file_middle_url") // 파일의 URL
+    private String fileMiddleUrl;
+
+    @Column(nullable = false, name = "file_thumbnail_path") // 파일의 저장 경로
+    private String fileThumbnailPath;
+
+    @Column(nullable = false, name = "file_thumbnail_url") // 파일의 URL
+    private String fileThumbnailUrl;
+
     @Column(nullable = false, name = "file_ext") // 파일 확장자
     private String fileExt;
 
@@ -58,78 +71,21 @@ public class RestImage {
         restaurant.getRestImages().add(this);
     }
 
-    public static RestImage createRestImage(MultipartFile multipartFile, Restaurant restaurant) {
-        String fileOriginName = multipartFile.getOriginalFilename();
-        String contentType = multipartFile.getContentType();
-        String[] nameArray = fileOriginName.split("\\.");
-        String ext = nameArray[nameArray.length - 1];
-        String fileSaveName = getFileSaveName(ext, restaurant.getId().toString() + "_" + restaurant.getName());
-        String urlPath = getFileUploadPath() + "/" + fileSaveName;
-        File dest = new File(urlPath);
-
-        try {
-            System.out.println(multipartFile.getInputStream().getClass());
-            InputStream fileStream = multipartFile.getInputStream();
-            // TODO: 이미지를 copy 한뒤에 오류로 종료될 때 이미지를 삭제 처리해주기 (DB에는 안들어감)
-            FileUtils.copyInputStreamToFile(fileStream, dest);
-        } catch (IOException e) {
-            FileUtils.deleteQuietly(dest);
-            e.printStackTrace();
-        }
-
+    public static RestImage createRestImage(RestImageDto restImageDto, Restaurant restaurant) {
+        // TODO: ModelMapper 처리하기
         RestImage restImage = RestImage.builder()
-                .fileOriginName(fileOriginName)
-                .filePath(dest.getPath())
-                .fileUrl("/" + urlPath)
-                .fileSaveName(fileSaveName)
-                .fileExt(ext)
-                .contentType(contentType)
+                .fileOriginName(restImageDto.getFileOriginName())
+                .filePath(restImageDto.getFilePath())
+                .fileUrl(restImageDto.getFileUrl())
+                .fileSaveName(restImageDto.getFileSaveName())
+                .fileExt(restImageDto.getFileExt())
+                .fileMiddlePath(restImageDto.getFileMiddlePath())
+                .fileMiddleUrl(restImageDto.getFileMiddleUrl())
+                .fileThumbnailPath(restImageDto.getFileThumbnailPath())
+                .fileThumbnailUrl(restImageDto.getFileThumbnailUrl())
+                .contentType(restImageDto.getContentType())
                 .build();
         restImage.setRestaurant(restaurant);
-
         return restImage;
-    }
-
-    public static String makeDirectory(LocalDateTime localDate){
-        final String SAVE_WINDOW_PATH = "C:/restImages";
-        final String SAVE_LINUX_PATH = "/restImages";
-        final String PREFIX_URL = "restImages/";
-
-        File dir;
-        String yearPath = PREFIX_URL + Integer.toString(localDate.getYear());
-        dir = new File(yearPath);
-        if(!dir.exists()){
-            dir.mkdirs();
-            System.out.println("created yearDirectory!");
-        }
-        String monthPath = yearPath + "/" + Integer.toString(localDate.getMonthValue());
-        dir = new File(monthPath);
-        if(!dir.exists()){
-            dir.mkdirs();
-            System.out.println("created monthDirectory!");
-        }
-        String dayPath = monthPath + "/" + Integer.toString(localDate.getDayOfMonth());
-        dir = new File(dayPath);
-        if(!dir.exists()){
-            dir.mkdirs();
-            System.out.println("created dayDirectory!");
-        }
-        return  dayPath;
-    }
-
-    public static String getFileUploadPath(){
-        LocalDateTime dateTime = LocalDateTime.now();
-        return makeDirectory(dateTime);
-    }
-
-    public static String getFileSaveName(String ext, String fileName){
-        LocalDateTime dateTime = LocalDateTime.now();
-        fileName += "_"
-                + Integer.toString(dateTime.getHour())
-                + Integer.toString(dateTime.getMinute())
-                + Integer.toString(dateTime.getSecond())
-                + Integer.toString(dateTime.getNano())
-                + "." + ext;
-        return fileName;
     }
 }
