@@ -74,15 +74,15 @@ public class FileUtil {
         int originWidth = srcImg.getWidth();
         int originHeight = srcImg.getHeight();
         
-        int thumbnailWeight = originWidth;
-        int thumbnailHeight = (originWidth * dh) / dw;
-        if(thumbnailHeight > originHeight) {
-            thumbnailWeight = (originHeight * dw) / dh;
-            thumbnailHeight = originHeight;
+        int cropWeight = originWidth;
+        int cropHeight = (originWidth * dh) / dw;
+        if(cropHeight > originHeight) {
+            cropWeight = (originHeight * dw) / dh;
+            cropHeight = originHeight;
         } 
 
-        BufferedImage cropImg = Scalr.crop(srcImg, (originWidth-thumbnailWeight)/2,
-                (originHeight-thumbnailHeight)/2, thumbnailWeight, thumbnailHeight);
+        BufferedImage cropImg = Scalr.crop(srcImg, (originWidth-cropWeight)/2,
+                (originHeight-cropHeight)/2, cropWeight, cropHeight);
 
         BufferedImage destImg = Scalr.resize(cropImg, dw, dh);
 
