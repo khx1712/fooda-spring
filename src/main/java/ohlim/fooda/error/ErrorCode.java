@@ -19,7 +19,8 @@ public enum ErrorCode {
     ACCESS_DENIED(403, "D004", "Access Denied"),
     INVALID_REFRESH_TOKEN(401, "C009","Invalid Access Token"),
     EXPIRED_REFRESH_TOKEN(401, "C010", "Expired RefreshToken"),
-    NO_REFRESH_TOKEN(401, "C011", "No Refresh Token");
+    NO_REFRESH_TOKEN(401, "C011", "No Refresh Token"),
+    DEFAULT_FOLDER(405, "C012", "Default Folder");
 
     private final String code;
     private final String message;

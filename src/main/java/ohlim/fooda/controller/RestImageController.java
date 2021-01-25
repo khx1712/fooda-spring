@@ -73,16 +73,17 @@ public class RestImageController {
     }
 
     @ApiOperation(value = "식당사진 삭제", notes = "해당 id의 사진을 삭제합니다.")
-    @DeleteMapping("/user/image/{imageId}")
+    @DeleteMapping("/user/image")
     public ResponseEntity<?> delete(
             Authentication authentication,
-            @PathVariable("imageId") Long id
+            @RequestParam("imageId") Long imageId,
+            @RequestParam("restaurantId") Long restaurantId
     ) throws RestImageNotFoundException {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        restImageService.deleteRestImage(id);
+        restImageService.deleteRestImage(imageId, restaurantId);
         return  new ResponseEntity<>(
                 SuccessResponse.builder()
-                        .message("Id "+ id.toString() + " 이미지를 삭제하였습니다.")
+                        .message("Id "+ imageId.toString() + " 이미지를 삭제하였습니다.")
                         .build()
                 , HttpStatus.OK);
     }

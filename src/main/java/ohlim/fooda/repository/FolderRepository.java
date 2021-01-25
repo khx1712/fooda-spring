@@ -37,6 +37,13 @@ public class FolderRepository{
                 .getSingleResult();
     }
 
+    public List<Folder> findAllByUserName(String userName){
+        return em.createQuery("select f from Folder f join f.account a" +
+                "where a.userName = :userName", Folder.class)
+                .setParameter("userName", userName)
+                .getResultList();
+    }
+
     public void delete(Folder folder){
         em.remove(folder);
     }

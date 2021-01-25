@@ -7,6 +7,7 @@ import ohlim.fooda.dto.folder.FolderDto;
 import ohlim.fooda.dto.folder.FolderDetailDto;
 import ohlim.fooda.dto.folder.FolderRestaurantDto;
 import ohlim.fooda.error.exception.AccountNotFoundException;
+import ohlim.fooda.error.exception.DefaultFolderException;
 import ohlim.fooda.error.exception.FolderNotEmptyException;
 import ohlim.fooda.error.exception.FolderNotFoundException;
 import ohlim.fooda.repository.AccountRepository;
@@ -67,12 +68,25 @@ public class FolderService {
      */
     // TODO : 폴더를 삭제하면 하위의 모든 식당을 삭제할 것인지 정하기 (지금은 폴더안에 식당 있으면 삭제 못하게 하기)
     public void deleteFolder(Long id, String userName) throws FolderNotFoundException {
+        Account account = accountRepository.findByUserName(userName).orElseThrow(
+                ()-> new AccountNotFoundException());
         List<Restaurant> restaurants = restaurantRepository.findByFolderId(id);
         if(!restaurants.isEmpty()){
             throw new FolderNotEmptyException();
         }
-        Folder folder = folderRepository.findByIdAndUserName(id, userName);
-        folderRepository.delete(folder);
+        List<Folder> folders = folderRepository.findAllByUserName(userName);
+        // List<Folder> folders = account.getFolders(); TODO: 뭐가 더 빠를지 고민해보기
+        for(Folder folder: folders){
+            if(folder.getId().equals(id)){
+                if(folders.size() >= 1) {
+                    folderRepository.delete(folder);
+                    return;
+                }else{
+                    throw new DefaultFolderException();
+                }
+            }
+        }
+        throw new FolderNotFoundException();
     }
 
     /**

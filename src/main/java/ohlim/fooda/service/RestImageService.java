@@ -35,20 +35,21 @@ public class RestImageService {
      * 이미지 id에 해당하는 이미지를 삭제합니다.
      * @param id 이미지 id
      */
-    public void deleteRestImage(Long id) throws RestImageNotFoundException {
+    public void deleteRestImage(Long id, Long restaurantId) throws RestImageNotFoundException {
+        Restaurant restaurant = restaurantRepository.getRestaurant(restaurantId);
         RestImage restImage = restImageRepository.getRestImage(id);
-        String filePath = restImage.getFilePath();
-        File deleteFile = new File(filePath);
-        if( deleteFile.exists() ){
-            if(deleteFile.delete()){
-                System.out.println("파일삭제 성공");
-            }else{
-                System.out.println("파일삭제 실패");
-            }
-        }else{
-            System.out.println("파일이 존재하지 않습니다.");
-        }
         restImageRepository.delete(restImage);
+        if(restaurant.getThumbnailUrl().equals(restImage.getFileThumbnailUrl())){
+            List<RestImage> thumbRestImage = restImageRepository.findThumbnailByRestaurantId(restaurantId);
+            if(!thumbRestImage.isEmpty()) {
+                restaurant.setThumbnailUrl(thumbRestImage.get(0).getFileThumbnailUrl());
+            }else{
+                restaurant.setThumbnailUrl(null);
+            }
+        }
+        fileUtil.deleteFile(restImage.getFilePath());
+        //fileUtil.deleteFile(restImage.getFileMiddlePath());
+        fileUtil.deleteFile(restImage.getFileThumbnailPath());
     }
 
     /**
@@ -66,6 +67,9 @@ public class RestImageService {
             RestImage restImage = RestImage.createRestImage(restImageDto, restaurant);
             restImageRepository.save(restImage);
             restImageUrlDtos.add(RestImageUrlDto.createRestImageUrlDto(restImage));
+            if(restaurant.getThumbnailUrl() == null){
+                restaurant.setThumbnailUrl(restImage.getFileThumbnailUrl());
+            }
         }
         return restImageUrlDtos;
     }

@@ -31,8 +31,17 @@ public class RestImageRepository {
         em.remove(restImage);
     }
 
+    public List<RestImage> findThumbnailByRestaurantId(Long restaurantId){
+        return em.createQuery("select ri from RestImage ri join ri.restaurant r " +
+                        "where r.id = :restaurantId order by ri.registerDate DESC"
+                , RestImage.class)
+                .setParameter("restaurantId", restaurantId)
+                .setMaxResults(1)
+                .getResultList();
+    }
+
     public List<RestImage> findAllByRestaurantId(Long restaurantId){
-        return em.createQuery("select ri from RestImage ri join ri.restaurant r where r.restaurant_id = :restaurantId"
+        return em.createQuery("select ri from RestImage ri join ri.restaurant r where r.id = :restaurantId"
                 , RestImage.class)
                 .setParameter("restaurantId", restaurantId)
                 .getResultList();

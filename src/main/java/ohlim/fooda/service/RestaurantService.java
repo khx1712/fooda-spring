@@ -97,6 +97,9 @@ public class RestaurantService {
             RestImageDto restImageDto = fileUtil.uploadFile(multipartFile, restaurant.getId());
             RestImage restImage = RestImage.createRestImage(restImageDto, restaurant);
             restImageRepository.save(restImage);
+            if(restaurant.getThumbnailUrl() == null){
+                restaurant.setThumbnailUrl(restImage.getFileThumbnailUrl());
+            }
         }
         return restaurant.getId();
     }
@@ -127,6 +130,12 @@ public class RestaurantService {
      */
     public void deleteRestaurant(String username, Long id) throws RestaurantNotFoundException {
         Restaurant restaurant = restaurantRepository.findByUserNameAndId(username, id);
+        Set<RestImage> restImages = restaurant.getRestImages();
+        for(RestImage restImage :restImages){
+            fileUtil.deleteFile(restImage.getFilePath());
+            //fileUtil.deleteFile(restImage.getFileMiddlePath());
+            fileUtil.deleteFile(restImage.getFileThumbnailPath());
+        }
         restaurantRepository.delete(restaurant);
     }
 
