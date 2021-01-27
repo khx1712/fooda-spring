@@ -6,10 +6,7 @@ import ohlim.fooda.domain.Folder;
 import ohlim.fooda.domain.RestImage;
 import ohlim.fooda.domain.Restaurant;
 import ohlim.fooda.dto.restImage.RestImageDto;
-import ohlim.fooda.dto.restaurant.RestaurantDetailDto;
-import ohlim.fooda.dto.restaurant.RestaurantImageDto;
-import ohlim.fooda.dto.restaurant.RestaurantDto;
-import ohlim.fooda.dto.restaurant.RestaurantThumbnailDto;
+import ohlim.fooda.dto.restaurant.*;
 import ohlim.fooda.error.exception.AccountNotFoundException;
 import ohlim.fooda.error.exception.InvalidParameterException;
 import ohlim.fooda.error.exception.RestaurantNotFoundException;
@@ -19,6 +16,7 @@ import ohlim.fooda.repository.RestImageRepository;
 import ohlim.fooda.repository.RestaurantRepository;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,15 +32,17 @@ public class RestaurantService {
     private RestImageRepository restImageRepository;
     private FolderRepository folderRepository;
     private FileUtil fileUtil;
+    private LocationUtil locationUtil;
 
     @Autowired
-    public RestaurantService(RestaurantRepository restaurantRepository, AccountRepository accountRepository,
-                             RestImageRepository restImageRepository, FolderRepository folderRepository, FileUtil fileUtil) {
+    public RestaurantService(RestaurantRepository restaurantRepository, AccountRepository accountRepository, FileUtil fileUtil,
+                             RestImageRepository restImageRepository, FolderRepository folderRepository, LocationUtil locationUtil) {
         this.restaurantRepository = restaurantRepository;
         this.accountRepository = accountRepository;
         this.restImageRepository = restImageRepository;
         this.folderRepository = folderRepository;
         this.fileUtil = fileUtil;
+        this.locationUtil = locationUtil;
     }
 
     /**
@@ -86,12 +86,17 @@ public class RestaurantService {
      * @param multipartFiles 식당의 이미지 리스트
      * @return 저장된 식당 아이디
      */
-    public Long addRestaurant(String userName, RestaurantDto restaurantDto, List<MultipartFile> multipartFiles)
-            throws ParseException, NotFoundException{
+    public Long addRestaurant(String userName, RestaurantDto restaurantDto, List<MultipartFile> multipartFiles) throws NotFoundException, ParseException {
         Account account = accountRepository.findByUserName(userName).orElseThrow(()-> new AccountNotFoundException());
         Folder folder = folderRepository.getFolder(restaurantDto.getFolderId());
         Restaurant restaurant = Restaurant.createRestaurant(restaurantDto, account, folder);
+        if(restaurant.getLatitude() == null && restaurant.getLongitude() == null){
+            LatLngDto latLngDto = locationUtil.locationToGps(restaurant.getLocation());
+            restaurant.setLatitude(latLngDto.getLatitude());
+            restaurant.setLongitude(latLngDto.getLongitude());
+        }
         restaurantRepository.save(restaurant);
+
         System.out.println(restaurant.getId());
         for(MultipartFile multipartFile: multipartFiles){
             RestImageDto restImageDto = fileUtil.uploadFile(multipartFile, restaurant.getId());

@@ -1,6 +1,7 @@
 package ohlim.fooda.service;
 
 import javassist.NotFoundException;
+import ohlim.fooda.dto.restaurant.LatLngDto;
 import ohlim.fooda.error.exception.InvalidLocationException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -22,7 +23,14 @@ import java.util.List;
 @Component
 public class LocationUtil {
 
-    public static String getGPSKakaoApiFromLocation(String location){
+    public LatLngDto locationToGps(String location) throws NotFoundException, ParseException {
+        String locationJson = getGPSKakaoApiFromLocation(location);
+        System.out.println(locationJson);
+        List<Double> GPS = getLatLonFromJsonString(locationJson);
+        return LatLngDto.createLatLngDto(GPS.get(0), GPS.get(1));
+    }
+
+    private static String getGPSKakaoApiFromLocation(String location){
         String apiKey = "fb79115e278a86dc71d1de6675938a26";
         String apiUrl = "https://dapi.kakao.com/v2/local/search/address.json";
         String jsonString = null;
@@ -53,7 +61,7 @@ public class LocationUtil {
         return jsonString;
     }
 
-    public static List<Double> getLatLonFromJsonString(String locationJson) throws ParseException, NotFoundException {
+    private static List<Double> getLatLonFromJsonString(String locationJson) throws ParseException, NotFoundException {
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject) jsonParser.parse(locationJson);
         JSONArray documentArray = (JSONArray) jsonObject.get("documents");

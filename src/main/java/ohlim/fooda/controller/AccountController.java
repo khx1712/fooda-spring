@@ -8,6 +8,7 @@ import ohlim.fooda.dto.SuccessResponse;
 import ohlim.fooda.dto.user.AccountDto;
 import ohlim.fooda.dto.user.LoginDto;
 import ohlim.fooda.dto.user.TokenPairDto;
+import ohlim.fooda.error.exception.InvalidParameterException;
 import ohlim.fooda.service.AccountService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,7 +51,11 @@ public class AccountController {
 
     @ApiOperation(value = "유저 등록", notes = "유저 정보로 유저를 등록합니다.")
     @PostMapping(path="/newUser/add")
-    public ResponseEntity<?> addNewUser (@RequestBody AccountDto accountDto) {
+    public ResponseEntity<?> addNewUser (@RequestBody @Validated AccountDto accountDto
+            , BindingResult bindingResult) {
+        if(bindingResult.hasErrors()) {
+            throw new InvalidParameterException(bindingResult);
+        }
         Long accountId = accountService.addAccount(accountDto);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
@@ -71,9 +79,9 @@ public class AccountController {
     }
 
     @ApiOperation(value = "유저 이메일 중복 검사", notes = "유저의 이메일 중복되었는지 검사합니다.")
-    @PostMapping(path="/newUser/checkEmail/{email}")
+    @PostMapping(path="/newUser/checkEmail")
     public ResponseEntity<?> checkEmail (
-            @PathVariable("email") String email){
+            @RequestParam("email") String email){
         accountService.checkDuplicateEmail(email);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
@@ -83,7 +91,11 @@ public class AccountController {
 
     @ApiOperation(value = "유저 로그인", notes = "아이디와 비밀번호로 로그인합니다.")
     @PostMapping(path = "/newUser/login")
-    public ResponseEntity<?> login(@RequestBody LoginDto loginDto) throws Exception {
+    public ResponseEntity<?> login(@RequestBody @Validated LoginDto loginDto
+            , BindingResult bindingResult) throws Exception {
+        if(bindingResult.hasErrors()) {
+            throw new InvalidParameterException(bindingResult);
+        }
         TokenPairDto tokenPairDto = accountService.loginAccount(loginDto);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
@@ -95,20 +107,26 @@ public class AccountController {
     @ApiOperation(value = "유저 로그아웃", notes = "accessToken, refreshToken으로 로그아웃 합니다.")
     @PostMapping(path="/newUser/logout")
     public ResponseEntity<?> logout(
-            @RequestBody TokenPairDto tokenPairDto
+            @RequestBody @Validated TokenPairDto tokenPairDto, BindingResult bindingResult
     ) {
-        accountService.logoutAccount(tokenPairDto);
+        if(bindingResult.hasErrors()) {
+            throw new InvalidParameterException(bindingResult);
+        }
+        String userName = accountService.logoutAccount(tokenPairDto);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
-                        .message("로그아웃 되었습니다.").build()
+                        .message("'"+userName+"'가 로그아웃 되었습니다.").build()
                 , HttpStatus.OK);
     }
 
     @ApiOperation(value = "토큰 재발급", notes = "만료된 accessToken을 재발급 받습니다.")
     @PostMapping(path="/newUser/refresh")
     public ResponseEntity<?>  requestForNewAccessToken(
-            @RequestBody TokenPairDto tokenPairDto
+            @RequestBody @Validated TokenPairDto tokenPairDto, BindingResult bindingResult
     ) {
+        if(bindingResult.hasErrors()) {
+            throw new InvalidParameterException(bindingResult);
+        }
         TokenPairDto newTokenPairDto = accountService.tokenRefresh(tokenPairDto);
         return new ResponseEntity<>(
                 SuccessResponse.builder()

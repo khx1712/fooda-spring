@@ -18,11 +18,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.util.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -42,17 +44,14 @@ public class RestaurantController {
     @ApiOperation(value = "식당 등록", notes = "식당 정보와 사진으로 새로운 식당을 등록합니다.")
     @PostMapping(value = "/user/restaurant", consumes = { MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<?> create(
-            Authentication authentication,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestPart @Validated RestaurantDto resource,
             BindingResult bindingResult,
             @RequestPart List<MultipartFile> files
             ) throws ParseException, NotFoundException, IOException{
-
-        // Restaurant 조건에 맞지 않는 parameter 입력시 error
         if(bindingResult.hasErrors()) {
             throw new InvalidParameterException(bindingResult);
         }
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long restaurantId = restaurantService.addRestaurant(userDetails.getUsername(), resource, files);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
@@ -87,10 +86,9 @@ public class RestaurantController {
     @ApiOperation(value = "식당 삭제", notes = "해당 id의 식당을 삭제합니다.")
     @DeleteMapping("/user/restaurant/{restaurantId}")
     public ResponseEntity<?> delete(
-            Authentication authentication,
+            @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable("restaurantId") Long id
     ) throws RestaurantNotFoundException{
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         restaurantService.deleteRestaurant(userDetails.getUsername(), id);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
@@ -126,10 +124,9 @@ public class RestaurantController {
     @ApiOperation(value = "식당 목록(식당이름)", notes = "해당 식당이름과 일치하거나 유사한 식당목록을 제공합니다(Thumbnail 포함).")
     @GetMapping("/user/restaurants")
     public ResponseEntity<?> listByName(
-            Authentication authentication,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("name") String name
     ) throws RestaurantNotFoundException{
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         return new ResponseEntity<>(
                 SuccessResponse.builder()
                 .message("'"+name+"' 유저의 식당 목록입니다.")
@@ -140,13 +137,12 @@ public class RestaurantController {
     @ApiOperation(value = "식당 목록(위치)", notes = "해당 좌표와 가까운 식당들의 목록를 제공합니다(Thumbnail 포함).")
     @GetMapping("/user/map/restaurants")
     public ResponseEntity<?> list(
-            Authentication authentication,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("lat") Double lat,
             @RequestParam("lon") Double lon,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size
     ) throws RestaurantNotFoundException, InvalidParameterException {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Map<String, Object> body = restaurantService.getMapRestaurants(userDetails.getUsername(),lat, lon, page, size);
         return new ResponseEntity<>(
                 SuccessResponse.builder()

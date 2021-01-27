@@ -32,15 +32,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     RedisTemplate<String, Object> redisTemplate;
 
-    /* spring boot에서 filter를 Bean으로 등록해주는 code이다.
-        현재 버전에서는 등록하지 않아도 filder를 사용가능한듯하다 나중에 문제 없으면 삭제하자
-    @Bean
-    public FilterRegistrationBean JwtRequestFilterRegistration (JwtRequestFilter filter) {
-        FilterRegistrationBean registration = new FilterRegistrationBean(filter);
-        registration.setEnabled(false);
-        return registration;
-    }
-    */
+//    // spring boot에서 filter를 Bean으로 등록해주는 code이다.
+//    //    현재 버전에서는 등록하지 않아도 filder를 사용가능한듯하다 나중에 문제 없으면 삭제하자
+//    @Bean
+//    public FilterRegistrationBean JwtRequestFilterRegistration (JwtRequestFilter filter) {
+//        FilterRegistrationBean registration = new FilterRegistrationBean(filter);
+//        registration.setEnabled(false);
+//        return registration;
+//    }
+
 
     // "Authentication" 에 담겨오는 accessToken의 유효성을 판단하고,
     // UserDetail이 들어간 Autentication으로 만들어 다음 filter chain으로 넘겨준다.

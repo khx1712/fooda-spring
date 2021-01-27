@@ -34,6 +34,8 @@ public class Folder {
     @Column(name = "update_date")
     private Date updateDate;
 
+    // TODO: isDefaultFolder 추가
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private Account account;

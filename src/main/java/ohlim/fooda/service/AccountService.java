@@ -8,13 +8,11 @@ import ohlim.fooda.dto.user.AccountDetailDto;
 import ohlim.fooda.dto.user.AccountDto;
 import ohlim.fooda.dto.user.LoginDto;
 import ohlim.fooda.dto.user.TokenPairDto;
-import ohlim.fooda.error.exception.DuplicateEmailException;
-import ohlim.fooda.error.exception.DuplicateUserNameException;
-import ohlim.fooda.error.exception.ExpiredRefreshTokenException;
-import ohlim.fooda.error.exception.NoRefreshTokenException;
+import ohlim.fooda.error.exception.*;
 import ohlim.fooda.jwt.JwtTokenUtil;
 import ohlim.fooda.repository.AccountRepository;
 import ohlim.fooda.repository.FolderRepository;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,9 +33,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -74,7 +70,7 @@ public class AccountService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account account = accountRepository.findByUserName(username)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found with username: " + username));
+                .orElseThrow(AccountNotFoundException::new);
         List<GrantedAuthority> roles = new ArrayList<>();
         if ((account.getRole()).equals("ROLE_ADMIN")) {
             roles.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
@@ -142,7 +138,7 @@ public class AccountService implements UserDetailsService {
      * @param email 유저 이메일
      */
     public void checkDuplicateEmail(String email) {
-        if(accountRepository.findByEmail(email) != null){
+        if(accountRepository.findByEmail(email).isPresent()){
             throw new DuplicateEmailException();
         }
     }
@@ -154,14 +150,11 @@ public class AccountService implements UserDetailsService {
      */
     public TokenPairDto loginAccount(LoginDto loginDto) {
         final String username = loginDto.getUserName();
-        String password = bcryptEncoder.encode(loginDto.getPassword());
-        logger.info("test input username: " + username);
-
         // 아이디, 비밀번호의 유효성 검증
         try {
-            am.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+            am.authenticate(new UsernamePasswordAuthenticationToken(username, loginDto.getPassword()));
         } catch (BadCredentialsException e){ // 아이디, 비밀번호가 잘못됬음
-            e.printStackTrace();
+            throw new InvalidIdPasswordException();
         }
 
         // 토큰 생성
@@ -169,14 +162,14 @@ public class AccountService implements UserDetailsService {
         final String accessToken = jwtTokenUtil.generateAccessToken(userDetails);
         final String refreshToken = jwtTokenUtil.generateRefreshToken(username);
 
-        // reFresh 토큰을 생성
-        Token retok = new Token();
-        retok.setUsername(username);
-        retok.setRefreshToken(refreshToken);
+        // redis에 저장할 토큰을 생성
+        Token redisToken = new Token();
+        redisToken.setUsername(username);
+        redisToken.setRefreshToken(refreshToken);
 
         // userName을 key로 redis에 저장
         ValueOperations<String, Object> vop = redisTemplate.opsForValue();
-        vop.set(username, retok);
+        vop.set(username, redisToken);
 
         return TokenPairDto.createTokenPairDto(
                 accessToken,refreshToken);
@@ -186,7 +179,7 @@ public class AccountService implements UserDetailsService {
      * 토큰들을 받아 refreshToken을 삭제하여 로그아웃 시킵니다.
      * @param tokenPairDto 토큰 pair
      */
-    public void logoutAccount(TokenPairDto tokenPairDto) {
+    public String logoutAccount(TokenPairDto tokenPairDto) {
         String userName = null;
         String accessToken = tokenPairDto.getAccessToken();
         // TODO : token 만료 exception 처리 나중에 다시 고민해보기
@@ -210,6 +203,7 @@ public class AccountService implements UserDetailsService {
         //cache logout token for 10 minutes! : accessToken을 10분 뒤에 만료시킨다.
         redisTemplate.opsForValue().set(accessToken, true);
         redisTemplate.expire(accessToken, 10*6*1000, TimeUnit.MILLISECONDS);
+        return userName;
     }
 
     /**

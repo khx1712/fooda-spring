@@ -47,10 +47,8 @@ public class RestImageController {
     @ApiOperation(value = "식당사진 목록", notes = "해당 id의 식당 해당하는 사진목록을 제공합니다.")
     @GetMapping("/user/images/{restaurantId}")
     public ResponseEntity<?> listByRestId(
-            Authentication authentication,
             @PathVariable("restaurantId") Long id
     ){
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         return new ResponseEntity<>(
                 SuccessResponse.builder()
                         .message("Id "+ id.toString() + " 식당에 해당하는 이미지 목록입니다.")
@@ -61,10 +59,8 @@ public class RestImageController {
     @ApiOperation(value = "식당사진 상세", notes = "해당 id의 사진 상세정보를 제공합니다.")
     @GetMapping("/user/image/{restImageId}")
     public ResponseEntity<?> detail(
-            Authentication authentication,
             @PathVariable("restaurantId") Long id
     ){
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         return new ResponseEntity<>(
                 SuccessResponse.builder()
                         .message("Id "+ id.toString() + " 이미지의 상세입니다.")
