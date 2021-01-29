@@ -6,6 +6,7 @@ import ohlim.fooda.dto.restaurant.RestaurantDetailDto;
 import ohlim.fooda.dto.restaurant.RestaurantDto;
 import ohlim.fooda.dto.restaurant.RestaurantImageDto;
 import ohlim.fooda.dto.restaurant.RestaurantThumbnailDto;
+import ohlim.fooda.error.exception.InvalidParameterException;
 import ohlim.fooda.service.RestaurantService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,11 +31,14 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.mockito.Mock;
 import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.web.util.NestedServletException;
 
 import javax.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -95,6 +99,30 @@ class RestaurantControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.meta.restaurantId").value(1));
 
+    }
+
+    @Test
+    @WithMockUser(username = "testId", roles = {"USER, ADMIN"})
+    void create_입력오류() throws Exception{
+        RestaurantDto restaurantDto = RestaurantDto.create(restaurant);
+        restaurantDto.setFolderId(null);
+        restaurantDto.setCategory(null);
+
+        String body = objectMapper.writeValueAsString(restaurantDto);
+
+        MockMultipartFile resource = new MockMultipartFile("resource", "", "application/json", body.getBytes());
+
+        when(restaurantService.addRestaurant(any(),any(),any())).thenReturn(1L);
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/user/restaurant")
+                .file(resource)
+                .characterEncoding("UTF-8"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.success").value(false))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                        .value("ohlim.fooda.error.exception.InvalidParameterException: Invalid Request Data"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0].reason").value("폴더는 필수 값입니다."))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[1].reason").value("카테고리는 필수 값입니다."));
     }
 
     @Test
@@ -177,6 +205,17 @@ class RestaurantControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.documents[0].location").value("testLocation"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.documents[0].thumbnailUrl").value("testThumbnailUrl"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.documents[1].id").value(2));
+    }
+
+    @Test
+    @WithMockUser(username = "testId", roles = {"USER, ADMIN"})
+    void listByName_파라미터입력() throws Exception  {
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/user/restaurants"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.success").value(false))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                        .value("org.springframework.web.bind.MissingServletRequestParameterException: Required String parameter 'name' is not present"));
     }
 
     @Test

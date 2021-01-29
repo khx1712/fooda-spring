@@ -7,6 +7,10 @@ spring:
   resources:
     add-mappings: true
 
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
   jpa:
     database: mysql
     database-platform: org.hibernate.spatial.dialect.mysql.MySQL56InnoDBSpatialDialect

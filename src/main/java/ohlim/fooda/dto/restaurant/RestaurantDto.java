@@ -4,6 +4,7 @@ import lombok.*;
 import ohlim.fooda.domain.RestImage;
 import ohlim.fooda.domain.Restaurant;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Getter
@@ -12,12 +13,16 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RestaurantDto {
+    @NotNull(message = "폴더는 필수 값입니다.")
     private Long folderId;
+    @NotNull(message = "식당이름은 필수 값입니다.")
     private String name;
     private String phoneNumber;
     private Double latitude;
     private Double longitude;
+    @NotNull(message = "주소는 필수 값입니다.")
     private String location;
+    @NotNull(message = "카테고리는 필수 값입니다.")
     private Character category;
     private String businessHour;
 

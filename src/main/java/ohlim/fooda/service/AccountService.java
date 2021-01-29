@@ -181,22 +181,20 @@ public class AccountService implements UserDetailsService {
     public String logoutAccount(TokenPairDto tokenPairDto) {
         String userName = null;
         String accessToken = tokenPairDto.getAccessToken();
-        // TODO : token 만료 exception 처리 나중에 다시 고민해보기
-        try {
-            userName = jwtTokenUtil.getUsername(accessToken);
-        } catch (IllegalArgumentException e) {} catch (ExpiredJwtException e) { //expire됐을 때
-            userName = e.getClaims().getSubject();
-            logger.info("username from expired access token: " + userName);
-        }
+
+        // TODO: accessToken 만료 exception은 filter에서 처리해주므로 token 관련 test 작성하기
+        userName = jwtTokenUtil.getUsername(accessToken);
 
         // redis 에서 refreshToken 존재 유무 확인하고 삭제
         try {
             if (redisTemplate.opsForValue().get(userName) != null) {
                 redisTemplate.delete(userName);
+            }else {
+                throw new NoRefreshTokenException();
             }
-        } catch (IllegalArgumentException e) {
-            // TODO : refreshToken 존재 하지 않을때 exception 만들기
-            logger.warn("user does not exist");
+        } catch (IllegalArgumentException | NoRefreshTokenException e) {
+            //refresh 토큰 존재x 이미 로그아웃, 만료 되어있다는 것
+            logger.warn("user does not exist, already logout");
         }
 
         //cache logout token for 10 minutes! : accessToken을 10분 뒤에 만료시킨다.
