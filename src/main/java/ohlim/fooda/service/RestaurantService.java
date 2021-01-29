@@ -16,7 +16,6 @@ import ohlim.fooda.repository.RestImageRepository;
 import ohlim.fooda.repository.RestaurantRepository;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,12 +51,12 @@ public class RestaurantService {
      */
     public RestaurantDetailDto getRestaurant(Long id){
         Restaurant restaurant = restaurantRepository.getRestaurant(id);
-        return RestaurantDetailDto.createRestaurantDetailDto(restaurant);
+        return RestaurantDetailDto.create(restaurant);
     }
 
     public RestaurantImageDto getRestaurantIncludeImage(Long id) {
         Restaurant restaurant = restaurantRepository.getRestaurantImage(id);
-        return RestaurantImageDto.createRestaurantImageDto(restaurant);
+        return RestaurantImageDto.create(restaurant);
     }
 
     /**
@@ -73,7 +72,7 @@ public class RestaurantService {
         }
         List<RestaurantThumbnailDto> restaurantThumbnailDtos= new ArrayList<>();
         for(Restaurant restaurant : restaurants){
-            restaurantThumbnailDtos.add(RestaurantThumbnailDto.createRestaurantThumbnailDto(restaurant));
+            restaurantThumbnailDtos.add(RestaurantThumbnailDto.create(restaurant));
         }
         System.out.println(restaurantThumbnailDtos);
         return restaurantThumbnailDtos;
@@ -130,11 +129,10 @@ public class RestaurantService {
 
     /**
      * 식당 id에 해당하는 식당 삭제합니다.
-     * @param username 사용자 id
      * @param id 식당 id
      */
-    public void deleteRestaurant(String username, Long id) throws RestaurantNotFoundException {
-        Restaurant restaurant = restaurantRepository.findByUserNameAndId(username, id);
+    public void deleteRestaurant(Long id) throws RestaurantNotFoundException {
+        Restaurant restaurant = restaurantRepository.getRestaurant(id);
         Set<RestImage> restImages = restaurant.getRestImages();
         for(RestImage restImage :restImages){
             fileUtil.deleteFile(restImage.getFilePath());
@@ -174,7 +172,7 @@ public class RestaurantService {
 
         List<RestaurantThumbnailDto> restaurantThumbnailDtos = new ArrayList<>();
         for(Restaurant restaurant : restaurants){
-            restaurantThumbnailDtos.add(RestaurantThumbnailDto.createRestaurantThumbnailDto(restaurant));
+            restaurantThumbnailDtos.add(RestaurantThumbnailDto.create(restaurant));
         }
 
         Map<String, Object> meta = new HashMap<>();

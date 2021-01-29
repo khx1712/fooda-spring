@@ -18,7 +18,7 @@ public class RestaurantThumbnailDto {
     private String businessHour;
     private String thumbnailUrl;
 
-    public static RestaurantThumbnailDto createRestaurantThumbnailDto(Restaurant restaurant){
+    public static RestaurantThumbnailDto create(Restaurant restaurant){
         // TODO: ModelMapper 처리하기
         return RestaurantThumbnailDto.builder()
                 .id(restaurant.getId())

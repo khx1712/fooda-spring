@@ -12,7 +12,7 @@ public class RestImageUrlDto {
     private Long restImageId;
     private String fileUrl;
 
-    public static RestImageUrlDto createRestImageUrlDto(RestImage restImage) {
+    public static RestImageUrlDto create(RestImage restImage) {
         // TODO: ModelMapper 처리하기
         return RestImageUrlDto.builder()
                 .restImageId(restImage.getId())

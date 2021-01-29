@@ -20,11 +20,11 @@ public class FolderRestaurantDto {
     private Integer RestaurantCnt;
     private List<RestaurantThumbnailDto> restaurants;
 
-    public static FolderRestaurantDto createFolderRestaurantFto(Folder folder){
+    public static FolderRestaurantDto create(Folder folder){
         // TODO: ModelMapper 처리하기
         List<RestaurantThumbnailDto> restaurantThumbnailDtos = new ArrayList<>();
         for(Restaurant restaurant : folder.getRestaurants()){
-            restaurantThumbnailDtos.add(RestaurantThumbnailDto.createRestaurantThumbnailDto(restaurant));
+            restaurantThumbnailDtos.add(RestaurantThumbnailDto.create(restaurant));
         }
         return FolderRestaurantDto.builder()
                 .id(folder.getId())

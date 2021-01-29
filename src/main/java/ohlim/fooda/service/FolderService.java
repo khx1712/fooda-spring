@@ -98,7 +98,7 @@ public class FolderService {
         List<Folder> folders = folderRepository.findByUserName(username);
         List<FolderDetailDto> folderDetailDtos = new ArrayList<>();
         for(Folder folder: folders){
-            folderDetailDtos.add(FolderDetailDto.createFolderDetailDto(folder));
+            folderDetailDtos.add(FolderDetailDto.createFolder(folder));
         }
         return folderDetailDtos;
     }
@@ -110,7 +110,7 @@ public class FolderService {
      */
     public FolderDetailDto getFolder(Long id) throws FolderNotFoundException {
         Folder folder = folderRepository.getFolder(id);
-        return FolderDetailDto.createFolderDetailDto(folder);
+        return FolderDetailDto.createFolder(folder);
     }
 
     /**
@@ -120,6 +120,6 @@ public class FolderService {
      */
     public FolderRestaurantDto getFolderIncludeRest(Long id) {
         Folder folder = folderRepository.getFolderRestaurant(id);
-        return FolderRestaurantDto.createFolderRestaurantFto(folder);
+        return FolderRestaurantDto.create(folder);
     }
 }

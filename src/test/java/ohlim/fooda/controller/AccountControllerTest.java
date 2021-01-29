@@ -30,7 +30,6 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
 @ExtendWith(MockitoExtension.class)
 @Transactional
 class AccountControllerTest {
@@ -38,9 +37,8 @@ class AccountControllerTest {
     AccountService accountService;
     @InjectMocks
     AccountController accountController;
-    @Autowired
-    ObjectMapper objectMapper;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private MockMvc mockMvc;
     private final MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
             MediaType.APPLICATION_JSON.getSubtype(), StandardCharsets.UTF_8);

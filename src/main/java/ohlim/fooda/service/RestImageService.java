@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +65,7 @@ public class RestImageService {
             RestImageDto restImageDto = fileUtil.uploadFile(multipartFile, restaurantId);
             RestImage restImage = RestImage.createRestImage(restImageDto, restaurant);
             restImageRepository.save(restImage);
-            restImageUrlDtos.add(RestImageUrlDto.createRestImageUrlDto(restImage));
+            restImageUrlDtos.add(RestImageUrlDto.create(restImage));
             if(restaurant.getThumbnailUrl() == null){
                 restaurant.setThumbnailUrl(restImage.getFileThumbnailUrl());
             }
@@ -83,7 +82,7 @@ public class RestImageService {
         List<RestImage> restImages = restImageRepository.findAllByRestaurantId(id);
         List<RestImageUrlDto> restImageUrlDtos = new ArrayList<>();
         for(RestImage restImage: restImages){
-            restImageUrlDtos.add(RestImageUrlDto.createRestImageUrlDto(restImage));
+            restImageUrlDtos.add(RestImageUrlDto.create(restImage));
         }
         return restImageUrlDtos;
     }
@@ -95,7 +94,7 @@ public class RestImageService {
      */
     public RestImageDto getRestImage(Long id) {
         RestImage restImage = restImageRepository.getRestImage(id);
-        return RestImageDto.createRestImageDto(restImage);
+        return RestImageDto.create(restImage);
     }
 }
 

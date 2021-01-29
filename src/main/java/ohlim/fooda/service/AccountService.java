@@ -12,7 +12,6 @@ import ohlim.fooda.error.exception.*;
 import ohlim.fooda.jwt.JwtTokenUtil;
 import ohlim.fooda.repository.AccountRepository;
 import ohlim.fooda.repository.FolderRepository;
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,7 +88,7 @@ public class AccountService implements UserDetailsService {
         Iterable<Account> accounts = accountRepository.findAll();
         List<AccountDetailDto> accountDetailDtoList = new ArrayList<>();
         for(Account account : accounts){
-            accountDetailDtoList.add(AccountDetailDto.createAccountDetailDto(account));
+            accountDetailDtoList.add(AccountDetailDto.create(account));
         }
         return accountDetailDtoList;
     }
@@ -118,9 +117,9 @@ public class AccountService implements UserDetailsService {
             account.setRole("ROLE_USER");
         }
         account.setPassword(bcryptEncoder.encode(account.getPassword()));
-        accountRepository.save(account);
+        Account saved = accountRepository.save(account);
         folderRepository.save(Folder.createFolder(account, "새폴더"));
-        return account.getId();
+        return saved.getId();
     }
 
     /**

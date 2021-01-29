@@ -1,84 +1,83 @@
 package ohlim.fooda.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ohlim.fooda.domain.Restaurant;
+import ohlim.fooda.dto.restaurant.RestaurantDetailDto;
 import ohlim.fooda.dto.restaurant.RestaurantDto;
-import ohlim.fooda.dto.user.LoginDto;
-import ohlim.fooda.jwt.JwtRequestFilter;
-import ohlim.fooda.jwt.JwtTokenUtil;
-import ohlim.fooda.service.AccountService;
+import ohlim.fooda.dto.restaurant.RestaurantImageDto;
+import ohlim.fooda.dto.restaurant.RestaurantThumbnailDto;
 import ohlim.fooda.service.RestaurantService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
-import org.mockito.Spy;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.mockito.Mock;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.filter.CharacterEncodingFilter;
 
 import javax.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@ExtendWith(MockitoExtension.class)
 @Transactional
+@WebAppConfiguration
 class RestaurantControllerTest {
-    @Mock
+    @MockBean
     RestaurantService restaurantService;
-    @InjectMocks
-    RestaurantController restaurantController;
     @Autowired
-    ObjectMapper objectMapper;
+    RestaurantController restaurantController;
     @Autowired
     WebApplicationContext webApplicationContext;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private MockMvc mockMvc;
-    private MockMvc multipartMockMvc;
     private final MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
             MediaType.APPLICATION_JSON.getSubtype(), StandardCharsets.UTF_8);
+    private Restaurant restaurant;
 
     @BeforeEach
     public void setUp() throws Exception{
-        mockMvc = MockMvcBuilders.standaloneSetup(restaurantController).build();
-        multipartMockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        MockitoAnnotations.initMocks(this);
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .addFilters(new CharacterEncodingFilter("UTF-8", true)).build();
+        restaurant = Restaurant.builder()
+                .id(1L)
+                .name("testRestaurant")
+                .businessHour("testHour")
+                .latitude(12345.0)
+                .longitude(54321.0)
+                .thumbnailUrl("testThumbnailUrl")
+                .category('K')
+                .phoneNumber("testNumber")
+                .location("testLocation")
+                .restImages(new LinkedHashSet<>())
+                .build();
     }
 
     @Test
     @WithMockUser(username = "testId", roles = {"USER, ADMIN"})
     void create_성공() throws Exception{
-        RestaurantDto restaurantDto = RestaurantDto.builder()
-                .name("testRestaurant")
-                .businessHour("testHour")
-                .category('K')
-                .folderId(1L)
-                .phoneNumber("testNumber")
-                .location("경기 부천시 소향로 233")
-                .build();
+        RestaurantDto restaurantDto = RestaurantDto.create(restaurant);
         String body = objectMapper.writeValueAsString(restaurantDto);
 
         MockMultipartFile file1 = new MockMultipartFile("files", "test1.jpg", "text/plain", "test1 data".getBytes());
@@ -87,28 +86,20 @@ class RestaurantControllerTest {
 
         when(restaurantService.addRestaurant(any(),any(),any())).thenReturn(1L);
 
-        multipartMockMvc.perform(MockMvcRequestBuilders.multipart("/user/restaurant")
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/user/restaurant")
                 .file(resource)
                 .file(file1)
                 .file(file2)
                 .characterEncoding("UTF-8"))
-                .andDo(MockMvcResultHandlers.print());
-//                .andExpect(MockMvcResultMatchers.status().isCreated())
-//                .andExpect(MockMvcResultMatchers.jsonPath("$.meta.restaurantId").value(1));
-        // TODO: 오류 해결하기
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.meta.restaurantId").value(1));
 
     }
 
     @Test
-    void update() throws Exception{
-        RestaurantDto restaurantDto = RestaurantDto.builder()
-                .name("testRestaurant")
-                .businessHour("testHour")
-                .category('K')
-                .folderId(1L)
-                .phoneNumber("testNumber")
-                .location("경기 부천시 소향로 233")
-                .build();
+    void update_성공() throws Exception{
+        RestaurantDto restaurantDto = RestaurantDto.create(restaurant);
         String body = objectMapper.writeValueAsString(restaurantDto);
 
         when(restaurantService.updateRestaurant(any(), any())).thenReturn(1L);
@@ -122,4 +113,73 @@ class RestaurantControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.meta.restaurantId").value(1));
     }
 
+    @Test
+    void delete_성공() throws Exception {
+
+        doNothing().when(restaurantService).deleteRestaurant(any());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/user/restaurant/{restaurantId}", 1L))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("'1' 식당을 삭제하였습니다."));
+    }
+
+    @Test
+    void detail_성공() throws Exception {
+        RestaurantDetailDto restaurantDetailDto = RestaurantDetailDto.create(restaurant);
+        when(restaurantService.getRestaurant(any())).thenReturn(restaurantDetailDto);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/user/restaurant/{restaurantId}", 1L))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("'1' 식당의 상세입니다."))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents.restaurantId").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents.name").value("testRestaurant"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents.latitude").value(12345.0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents.location").value("testLocation"));
+    }
+
+    @Test
+    void detailImage_성공() throws Exception {
+        RestaurantImageDto restaurantImageDto = RestaurantImageDto.create(restaurant);
+        restaurantImageDto.getImageUrls().add("testImageUrl1");
+        restaurantImageDto.getImageUrls().add("testImageUrl2");
+
+        when(restaurantService.getRestaurantIncludeImage(any())).thenReturn(restaurantImageDto);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/user/restaurant/{restaurantId}/restImages", 1L))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("이미지를 포함한 '1' 식당의 상세입니다."))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents.name").value("testRestaurant"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents.latitude").value(12345.0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents.location").value("testLocation"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents.imageUrls[0]").value("testImageUrl1"));
+    }
+
+    @Test
+    @WithMockUser(username = "testId", roles = {"USER, ADMIN"})
+    void listByName_성공() throws Exception  {
+        List<RestaurantThumbnailDto> restaurantThumbnailDtos = new ArrayList<>();
+        restaurantThumbnailDtos.add(RestaurantThumbnailDto.create(restaurant));
+        Restaurant restaurant2  = restaurant;
+        restaurant2.setId(2L);
+        restaurantThumbnailDtos.add(RestaurantThumbnailDto.create(restaurant2));
+
+        when(restaurantService.getRestaurantByName(any(),any())).thenReturn(restaurantThumbnailDtos);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/user/restaurants")
+                .param("name", "testRestaurant"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("'testRestaurant' 이름과 유사한 식당 목록입니다."))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents[0].name").value("testRestaurant"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents[0].location").value("testLocation"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents[0].thumbnailUrl").value("testThumbnailUrl"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.documents[1].id").value(2));
+    }
+
+    @Test
+    void listGps_성공() throws Exception {
+    }
 }

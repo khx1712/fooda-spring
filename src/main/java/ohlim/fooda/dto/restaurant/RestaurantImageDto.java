@@ -22,7 +22,7 @@ public class RestaurantImageDto {
     private String businessHour;
     List<String> imageUrls;
 
-    public static RestaurantImageDto createRestaurantImageDto(Restaurant restaurant){
+    public static RestaurantImageDto create(Restaurant restaurant){
         // TODO: ModelMapper 처리하기
         List<String> restImageUrls = new ArrayList<>();
         for(RestImage restImage : restaurant.getRestImages()){

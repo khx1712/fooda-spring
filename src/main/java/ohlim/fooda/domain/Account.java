@@ -10,7 +10,6 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Positive;
 import java.util.*;
 
-@Data
 @Entity
 @Builder
 @Getter

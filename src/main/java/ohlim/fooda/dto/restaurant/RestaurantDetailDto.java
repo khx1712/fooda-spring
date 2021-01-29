@@ -24,7 +24,7 @@ public class RestaurantDetailDto {
     private String businessHour;
     private String thumbnailUrl;
 
-    public static RestaurantDetailDto createRestaurantDetailDto(Restaurant restaurant){
+    public static RestaurantDetailDto create(Restaurant restaurant){
         // TODO: ModelMapper 처리하기
         return RestaurantDetailDto.builder()
                 .restaurantId(restaurant.getId())

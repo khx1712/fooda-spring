@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import javassist.NotFoundException;
 import ohlim.fooda.dto.SuccessResponse;
 import ohlim.fooda.dto.restaurant.RestaurantDto;
+import ohlim.fooda.dto.restaurant.RestaurantThumbnailDto;
 import ohlim.fooda.error.exception.InvalidParameterException;
 import ohlim.fooda.service.RestImageService;
 import org.json.simple.parser.ParseException;
@@ -86,10 +87,9 @@ public class RestaurantController {
     @ApiOperation(value = "식당 삭제", notes = "해당 id의 식당을 삭제합니다.")
     @DeleteMapping("/user/restaurant/{restaurantId}")
     public ResponseEntity<?> delete(
-            @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable("restaurantId") Long id
     ) throws RestaurantNotFoundException{
-        restaurantService.deleteRestaurant(userDetails.getUsername(), id);
+        restaurantService.deleteRestaurant(id);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
                 .message("'"+id.toString()+"' 식당을 삭제하였습니다.").build()
@@ -127,16 +127,18 @@ public class RestaurantController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("name") String name
     ) throws RestaurantNotFoundException{
+        List<RestaurantThumbnailDto> restaurantThumbnailDtos =
+                restaurantService.getRestaurantByName(userDetails.getUsername(), name);
         return new ResponseEntity<>(
                 SuccessResponse.builder()
-                .message("'"+name+"' 유저의 식당 목록입니다.")
-                .documents(restaurantService.getRestaurantByName(userDetails.getUsername(), name)).build(),
+                .message("'"+name+"' 이름과 유사한 식당 목록입니다.")
+                .documents(restaurantThumbnailDtos).build(),
                 HttpStatus.OK);
     }
 
     @ApiOperation(value = "식당 목록(위치)", notes = "해당 좌표와 가까운 식당들의 목록를 제공합니다(Thumbnail 포함).")
     @GetMapping("/user/map/restaurants")
-    public ResponseEntity<?> list(
+    public ResponseEntity<?> listGps(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("lat") Double lat,
             @RequestParam("lon") Double lon,

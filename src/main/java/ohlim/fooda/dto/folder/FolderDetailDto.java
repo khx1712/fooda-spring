@@ -12,7 +12,7 @@ public class FolderDetailDto {
     private Long id;
     private String name;
 
-    public static FolderDetailDto createFolderDetailDto(Folder folder){
+    public static FolderDetailDto createFolder(Folder folder){
         // TODO: ModelMapper 처리하기
         return FolderDetailDto.builder()
                 .id(folder.getId())

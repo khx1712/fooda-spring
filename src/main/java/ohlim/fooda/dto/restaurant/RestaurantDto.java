@@ -20,4 +20,17 @@ public class RestaurantDto {
     private String location;
     private Character category;
     private String businessHour;
+
+    public static RestaurantDto create(Restaurant restaurant){
+        // TODO: ModelMapper 처리하기
+        return RestaurantDto.builder()
+                .name(restaurant.getName())
+                .category(restaurant.getCategory())
+                .businessHour(restaurant.getBusinessHour())
+                .location(restaurant.getLocation())
+                .phoneNumber(restaurant.getPhoneNumber())
+                .latitude(restaurant.getLatitude())
+                .longitude(restaurant.getLongitude())
+                .build();
+    }
 }

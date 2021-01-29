@@ -11,7 +11,7 @@ public class LatLngDto {
     private Double latitude;
     private Double longitude;
 
-    public static LatLngDto createLatLngDto(Double latitude, Double longitude){
+    public static LatLngDto create(Double latitude, Double longitude){
         return LatLngDto.builder()
                 .latitude(latitude)
                 .longitude(longitude)

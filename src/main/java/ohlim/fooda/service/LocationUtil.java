@@ -27,7 +27,7 @@ public class LocationUtil {
         String locationJson = getGPSKakaoApiFromLocation(location);
         System.out.println(locationJson);
         List<Double> GPS = getLatLonFromJsonString(locationJson);
-        return LatLngDto.createLatLngDto(GPS.get(0), GPS.get(1));
+        return LatLngDto.create(GPS.get(0), GPS.get(1));
     }
 
     private static String getGPSKakaoApiFromLocation(String location){

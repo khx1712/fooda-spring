@@ -21,7 +21,7 @@ public class RestImageDto {
     private String fileThumbnailUrl;
     private String contentType;
 
-    public static RestImageDto createRestImageDto(RestImage restImage){
+    public static RestImageDto create(RestImage restImage){
         // TODO: ModelMapper 처리하기
         return RestImageDto.builder()
                 .id(restImage.getId())

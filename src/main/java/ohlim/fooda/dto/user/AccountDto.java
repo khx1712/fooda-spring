@@ -31,7 +31,7 @@ public class AccountDto {
     private Integer age;
     private Character gender;
 
-    public static AccountDto createAccountDto(Account account){
+    public static AccountDto create(Account account){
         // TODO: ModelMapper 처라하기
         return AccountDto.builder()
                 .userName(account.getUserName())

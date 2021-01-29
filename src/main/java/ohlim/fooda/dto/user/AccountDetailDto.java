@@ -17,7 +17,7 @@ public class AccountDetailDto {
     private Integer age;
     private Character gender;
 
-    public static AccountDetailDto createAccountDetailDto(Account account){
+    public static AccountDetailDto create(Account account){
         // TODO: ModelMapper 처라하기
         return AccountDetailDto.builder()
                 .id(account.getId())
